@@ -6,7 +6,6 @@ const mongoose = require('mongoose');
 const bodyparser = require('body-parser')
 //import routes
 const authRoute = require('./routes/auth');
-
 dotenv.config();
 
 //connect to DB
@@ -21,7 +20,6 @@ app.use(bodyparser.json());
 
 //route middlewares
 app.use('/api/user', authRoute)
-
 
 app.listen(3000, () =>
 {
