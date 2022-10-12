@@ -13,4 +13,4 @@ const bucketSchema = mongoose.Schema({
     }]
 })
 
-module.exports = mongoose.Schema("Bucket", bucketSchema);
+module.exports = mongoose.model("Bucket", bucketSchema);
