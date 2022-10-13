@@ -1,6 +1,4 @@
 const mongoose =  require('mongoose');
-const User = require('./User')
-const Bucket = require('./Bucket')
 
 const projectSchema =  new mongoose.Schema({
     title: {
@@ -18,8 +16,9 @@ const projectSchema =  new mongoose.Schema({
     },
     buckets: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Bucket'
+        ref: 'Bucket',
+        default : []
     }]
 })
 
-module.exports = mongoose.Schema('Project', projectSchema);
+module.exports = mongoose.model('Project', projectSchema);

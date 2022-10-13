@@ -3,6 +3,7 @@ const User = require('../models/User');
 const {registerValidation, loginValidation} = require('../validation')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+
 router.post('/register', async (req,res) => {
     //Validate before creating a user
     const {error} = registerValidation(req.body);
