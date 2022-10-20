@@ -25,12 +25,11 @@ const taskSchema = mongoose.Schema({
     }],
     completed_by: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'User'
+        ref: 'User',
+        default: null
     },
     assisted_by: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
         ref: 'User',
         default: null
     },
@@ -40,7 +39,8 @@ const taskSchema = mongoose.Schema({
     },
     previous: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Task'
+        ref: 'Task',
+        default: null
     },
     cost:{
         type: Number
@@ -54,8 +54,12 @@ const taskSchema = mongoose.Schema({
     },
     recurrence:{
         type: Number
-    }
-
+    },
+    assigned_to:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
 })
 
 module.exports = mongoose.model('Task',taskSchema);
