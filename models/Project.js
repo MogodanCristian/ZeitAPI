@@ -1,4 +1,5 @@
 const mongoose =  require('mongoose');
+const Bucket = require('./Bucket')
 
 const projectSchema =  new mongoose.Schema({
     title: {
@@ -18,6 +19,11 @@ const projectSchema =  new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Bucket',
         default : []
+    }],
+    employees: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: []
     }]
 })
 

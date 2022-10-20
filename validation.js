@@ -28,7 +28,6 @@ const projectValidation = (data) =>{
     const schema =Joi.object({
         title: Joi.string().required(),
         description: Joi.string().required(),
-        manager_id: Joi.required()
     });
     return schema.validate(data);
 }
