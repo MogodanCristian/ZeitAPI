@@ -8,6 +8,7 @@ const bodyparser = require('body-parser')
 const authRoute = require('./routes/auth');
 const projectRoute = require('./routes/projectRoute');
 const bucketRoute =  require('./routes/bucketRoute');
+const taskRoute = require('./routes/taskRoute')
 dotenv.config();
 
 //connect to DB
@@ -21,9 +22,10 @@ mongoose.connect(process.env.DB_CONNECT,
 app.use(bodyparser.json());
 
 //route middlewares
-app.use('/api/users', authRoute);
+app.use('/api/auth', authRoute);
 app.use('/api/projects/', projectRoute);
 app.use('/api/buckets/',bucketRoute);
+app.use('/api/tasks/', taskRoute);
 
 app.listen(3000, () =>
 {
