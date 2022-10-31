@@ -2,10 +2,12 @@ const router = require('express').Router();
 const Project = require('../models/Project');
 const Bucket = require('../models/Bucket');
 const jwt = require('jsonwebtoken');
-const{projectValidation} = require('../validation.js')
+const{projectValidation} = require('../validation.js');
+const Task = require('../models/Task');
 
 //CREATE PROJECT
 router.post('/:managerID', async (req,res) =>{
+    //PROJECT VALIDATION
     const {error} = projectValidation(req.body);
     if(error)
     {
@@ -31,9 +33,15 @@ router.delete('/:projectID', async(req, res) =>{
         const projectToRemove = await Project.findById({_id : req.params.projectID});
         projectToRemove.buckets.forEach(async (bucket) => {
             const b = await Bucket.findById(bucket);
-            if(b) {
-               await Bucket.remove({_id: b._id});
-            }
+            if(b){
+            b.tasks.forEach(async (task)=>{
+                const t = await Task.findById(task);
+                if(t){
+                    await Task.remove({_id: t._id})
+                }
+            })
+            await Bucket.remove({_id: b._id});}
+               
         });
 
         await Project.remove({_id : req.params.projectID});
@@ -101,7 +109,7 @@ router.patch('/add_employees/:projectID', async(req,res) =>{
     }
 })
 
-//ADD BUCKET TO PROJECT
+//ADD BUCKET TO PROJECT -- MOVE BUCKET TO
 
 router.patch('/add_buckets/:projectID', async(req,res) =>{
     try {
@@ -110,7 +118,7 @@ router.patch('/add_buckets/:projectID', async(req,res) =>{
                 _id: req.params.projectID
             },
             {
-                $push: {employees: req.body.bucket_ID}
+                $push: {buckets: req.body.bucket_ID}
             },
             {
                 new: true
@@ -123,6 +131,25 @@ router.patch('/add_buckets/:projectID', async(req,res) =>{
             message: error
         })
         
+    }
+})
+
+//GET ALL BUCKETS FOR PROJECT
+router.get('/:projectID', async(req,res)=>{
+    try {
+        const project = await Project.findById({
+            _id: req.params.projectID
+        });
+        var buckets = [];
+        for(var i=0; i < project.buckets.length; i++){
+            const b = await Bucket.findById(project.buckets[i]);
+            buckets.push(b);
+        }
+        res.json(buckets);
+    } catch (error) {
+        res.json({
+            message: error
+        })
     }
 })
 

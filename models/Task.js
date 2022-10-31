@@ -52,9 +52,6 @@ const taskSchema = mongoose.Schema({
     finished_working:{
         type: Date
     },
-    recurrence:{
-        type: Number
-    },
     assigned_to:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

@@ -32,6 +32,23 @@ const projectValidation = (data) =>{
     return schema.validate(data);
 }
 
+const bucketValidation = (data) =>{
+    const schema = Joi.object({
+        title: Joi.string().required(),
+    });
+    return schema.validate(data);
+}
+const taskValidation = (data) =>{
+    const schema = Joi.object({
+        title: Joi.string().required(),
+        description: Joi.string().required(),
+        priority: Joi.number().required(),
+    }).options({ stripUnknown : true });
+    return schema.validate(data);
+}
+
 module.exports.registerValidation = registerValidation;
 module.exports.loginValidation = loginValidation;
 module.exports.projectValidation = projectValidation;
+module.exports.bucketValidation = bucketValidation;
+module.exports.taskValidation = taskValidation;
