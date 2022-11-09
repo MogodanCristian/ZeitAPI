@@ -27,7 +27,7 @@ router.post('/:bucketID', async (req,res)=>{
                 _id: req.params.bucketID
             },
             {
-                $push:{
+                $addToSet:{
                     tasks: savedTask
                 }
             },
@@ -104,5 +104,20 @@ router.get('/',async(req,res)=>{
     }
 })
 
-
+//UPDATE TASK DETAILS
+router.put('/:taskID', async(req,res) =>{
+    try {
+        const patched = await Task.findByIdAndUpdate({
+            _id: req.params.taskID
+        },
+        {
+            $set: req.body
+        })
+        res.json(patched);
+    } catch (error) {
+        res.json({
+            message: error
+        })
+    }
+})
 module.exports = router;

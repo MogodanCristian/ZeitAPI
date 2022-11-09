@@ -9,6 +9,7 @@ const authRoute = require('./routes/auth');
 const projectRoute = require('./routes/projectRoute');
 const bucketRoute =  require('./routes/bucketRoute');
 const taskRoute = require('./routes/taskRoute')
+const userRoute = require('./routes/userRoute');
 dotenv.config();
 
 //connect to DB
@@ -26,6 +27,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/projects/', projectRoute);
 app.use('/api/buckets/',bucketRoute);
 app.use('/api/tasks/', taskRoute);
+app.use('/api/users/', userRoute);
 
 app.listen(3000, () =>
 {
