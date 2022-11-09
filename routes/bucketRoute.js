@@ -23,7 +23,7 @@ router.post('/:projectID', async (req,res) =>{
                 _id: req.params.projectID
             },
             {
-                $push : {buckets: savedBucket},
+                $addToSet : {buckets: savedBucket},
                 
             },
             {
@@ -116,7 +116,7 @@ router.patch('/add_task/:bucketID', async(req,res)=>{
             _id: req.params.bucketID
         },
         {
-            $push:{
+            $addToSet:{
                 tasks: req.body.task_ID
             }
         },

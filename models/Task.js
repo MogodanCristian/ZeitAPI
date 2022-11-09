@@ -57,6 +57,16 @@ const taskSchema = mongoose.Schema({
         ref: 'User',
         default: null
     },
+    difficulty:{
+        type: String,
+        default: "easy",
+        enum: [
+            "easy",
+            "medium",
+            "hard",
+            "very hard"
+        ]
+    }
 })
 
 module.exports = mongoose.model('Task',taskSchema);

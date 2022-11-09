@@ -14,6 +14,8 @@
     "body-parser": "^1.20.0",
     "dotenv": "^16.0.2",
     "express": "^4.18.1",
+    "joi": "^17.6.4",
+    "joi-password": "^4.0.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.6.3"
   },

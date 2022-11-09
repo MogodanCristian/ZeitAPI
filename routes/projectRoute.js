@@ -97,9 +97,11 @@ router.get('/find/:manager_id', async (req, res) =>{
 
 router.patch('/add_employees/:projectID', async(req,res) =>{
     try {
-        const patched = await Project.updateOne(
-            {_id: req.params.projectID},
-            {$push: {employees: req.body.employee_id}},
+        const patched = await Project.findOneAndUpdate(
+            {
+                _id: req.params.projectID
+            },
+            {$addToSet: {employees: req.body.employee_id}},
             {new: true});
         res.json(patched);
     } catch (error) {
@@ -107,7 +109,7 @@ router.patch('/add_employees/:projectID', async(req,res) =>{
             message: error
         })
     }
-})
+}) 
 
 //ADD BUCKET TO PROJECT -- MOVE BUCKET TO
 
@@ -118,7 +120,7 @@ router.patch('/add_buckets/:projectID', async(req,res) =>{
                 _id: req.params.projectID
             },
             {
-                $push: {buckets: req.body.bucket_ID}
+                $addToSet: {buckets: req.body.bucket_ID}
             },
             {
                 new: true
@@ -153,4 +155,20 @@ router.get('/:projectID', async(req,res)=>{
     }
 })
 
+//DELETE USER FROM PROJECT
+router.patch('/remove_employees/:projectID', async(req,res) =>{
+    try {
+        const patched = await Project.updateOne(
+            {_id: req.params.projectID},
+            {$pull: {employees: req.body.employee_id}},
+            {new: true});
+        res.json(patched);
+    } catch (error) {
+        res.json({
+            message: error
+        })
+    }
+})
+
+//implementare de vizualizare a progresului
 module.exports = router;

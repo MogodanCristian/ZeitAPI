@@ -1,6 +1,8 @@
 //validation
 
 const Joi = require('@hapi/joi');
+const {joiPasswordExtendCore} = require('joi-password');
+const joiPassword  = Joi.extend(joiPasswordExtendCore);
 
 //register validation
 const registerValidation = (data) => {
@@ -8,7 +10,14 @@ const registerValidation = (data) => {
         first_name: Joi.string().required().min(6).max(255),
         last_name: Joi.string().required().min(6).max(255),
         email: Joi.string().required().email(),
-        password: Joi.string().min(8).required(),
+        password: joiPassword.string()
+        .minOfSpecialCharacters(1)
+        .minOfLowercase(1)
+        .minOfUppercase(1)
+        .minOfNumeric(1)
+        .noWhiteSpaces()
+        .min(8)
+        .required(),
         role: Joi.string()
     });
     return schema.validate(data);
@@ -47,8 +56,23 @@ const taskValidation = (data) =>{
     return schema.validate(data);
 }
 
+
+const passwordValidation = (data) =>{
+    const schema = Joi.object({
+        password: joiPassword.string()
+        .minOfSpecialCharacters(1)
+        .minOfLowercase(1)
+        .minOfUppercase(1)
+        .minOfNumeric(1)
+        .noWhiteSpaces()
+        .min(8)
+    });
+    return schema.validate(data);
+}
+
 module.exports.registerValidation = registerValidation;
 module.exports.loginValidation = loginValidation;
 module.exports.projectValidation = projectValidation;
 module.exports.bucketValidation = bucketValidation;
 module.exports.taskValidation = taskValidation;
+module.exports.passwordValidation = passwordValidation;
