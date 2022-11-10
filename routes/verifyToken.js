@@ -1,6 +1,8 @@
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const Bucket = require('../models/Bucket');
+const Project = require('../models/Project')
 
-module.exports = function auth(req, res, next){
+const verifyToken=async(req, res, next)=>{
     const token = req.header('auth-token');
     if(!token) return res.status(401).send("Access denied!");
 
@@ -10,39 +12,77 @@ module.exports = function auth(req, res, next){
         next()
     } catch (err) {
         res.status(400).send('Invalid Token');
-    }
-    // const verifyToken = (req, res, next) => {
-    //     const authHeader = req.headers.token;
-    //     if (authHeader) {
-    //       const token = authHeader.split(" ")[1];
-    //       jwt.verify(token, process.env.JWT_SEC, (err, user) => {
-    //         if (err) res.status(403).json("Token is not valid!");
-    //         req.user = user;
-    //         next();
-    //       });
-    //     } else {
-    //       return res.status(401).json("You are not authenticated!");
-    //     }
-    //   };
-      
-    //   const verifyTokenAndAuthorization = (req, res, next) => {
-    //     verifyToken(req, res, () => {
-    //       if (req.user.id === req.params.id || req.user.isAdmin) {
-    //         next();
-    //       } else {
-    //         res.status(403).json("You are not alowed to do that!");
-    //       }
-    //     });
-    //   };
-      
-    //   const verifyTokenAndAdmin = (req, res, next) => {
-    //     verifyToken(req, res, () => {
-    //       if (req.user.isAdmin) {
-    //         next();
-    //       } else {
-    //         res.status(403).json("You are not alowed to do that!");
-    //       }
-    //     });
-    //   };
+    }}
 
+const verifyTokenAndManager = (req,res,next) => {
+  verifyToken(req,res,()=>{
+    if(req.user.role === "manager" || req.user.role === "admin")
+    {
+      next();
+    }
+    else{
+      res.status(403).json("Only managers are allowed to do that!");
+    }
+  })
 }
+//verifies if the user is a manager and if they can modify the project(only project managers can modify their own project) 
+const verifyTokenAndManagerAuthorization=(req, res, next) => {
+        verifyToken(req, res, async() => {
+          if(req.params.projectID){
+            const project = await Project.findById(req.params.projectID);
+            if ((req.user.role === "manager" && req.user._id == project.manager_id) || req.user.role === "admin") {
+                  next();
+            } 
+            else {
+              res.status(403).json("Only the manager or admin that created the project is allowed to do that!");
+            }
+          }
+          if(req.params.bucketID)
+          {
+            const project = await Project.find({
+              buckets: req.params.bucketID
+            })
+            if((req.user.role === "manager" && req.user._id == project[0].manager_id) || req.user.role === "admin")
+            {
+              next();
+            }
+            else{
+              res.status(403).json("Only the manager or admin that created the bucket is allowed to do that!");
+            }
+          }
+          if(req.params.taskID){
+            const bucket = await Bucket.find({
+              tasks: req.params.taskID
+            })
+            const project = await Project.find({
+              buckets: bucket[0]._id
+            })
+            if((req.user.role === "manager" && req.user._id == project[0].manager_id) || req.user.role === "admin")
+            {
+              next();
+            }
+            else{
+              res.status(403).json("Only the manager or admin that created the task is allowed to do that!");
+            }
+          }
+        });
+      };
+
+
+const verifyTokenAndAdmin = (req, res, next) => {
+        verifyToken(req, res, () => {
+          if (req.user.role === "admin") {
+            next();
+          } else {
+            res.status(403).json("Only admins are allowed to do that!");
+          }
+        });
+      };
+    module.exports = {
+        verifyToken,
+        verifyTokenAndManagerAuthorization,
+        verifyTokenAndManager,
+        verifyTokenAndAdmin
+    }
+      
+      

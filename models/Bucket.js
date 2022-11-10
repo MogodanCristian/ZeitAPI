@@ -10,7 +10,7 @@ const bucketSchema = mongoose.Schema({
     tasks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Task'
-    }]
+    }],
 })
 
 module.exports = mongoose.model("Bucket", bucketSchema);

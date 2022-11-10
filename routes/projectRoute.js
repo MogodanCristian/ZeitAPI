@@ -4,20 +4,22 @@ const Bucket = require('../models/Bucket');
 const jwt = require('jsonwebtoken');
 const{projectValidation} = require('../validation.js');
 const Task = require('../models/Task');
+const{verifyToken, verifyTokenAndManagerAuthorization,verifyTokenAndManager, verifyTokenAndAdmin}=require('./verifyToken')
 
 //CREATE PROJECT
-router.post('/:managerID', async (req,res) =>{
+router.post('/:managerID', verifyTokenAndManager ,async (req,res) =>{
     //PROJECT VALIDATION
     const {error} = projectValidation(req.body);
     if(error)
     {
         return res.status(400).send(error.details[0].message)
     }
-    const project = new Project({
+    var project = new Project({
         title : req.body.title,
         description : req.body.description,
         manager_id : req.params.managerID,
     });
+    project.employees.push(req.params.managerID);
     try {
         const savedProject = await project.save();
         res.send({project: savedProject._id});
@@ -28,7 +30,7 @@ router.post('/:managerID', async (req,res) =>{
 
 //DELETE PROJECT 
 
-router.delete('/:projectID', async(req, res) =>{
+router.delete('/:projectID', verifyTokenAndManagerAuthorization,async(req, res) =>{
     try {
         const projectToRemove = await Project.findById({_id : req.params.projectID});
         projectToRemove.buckets.forEach(async (bucket) => {
@@ -45,7 +47,7 @@ router.delete('/:projectID', async(req, res) =>{
         });
 
         await Project.remove({_id : req.params.projectID});
-        return res.status(200).json("project deleted successfully");
+        return res.status(200).json("Project deleted successfully");
     }
     catch (error) {
         res.status(500).json({ message: error });
@@ -54,7 +56,7 @@ router.delete('/:projectID', async(req, res) =>{
 
 //UPDATE PROJECT DETAILS
 
-router.put('/:projectID', async(req,res) =>{
+router.put('/:projectID',verifyTokenAndManagerAuthorization ,async(req,res) =>{
     try {
         const patched = await Project.findByIdAndUpdate(
             {_id : req.params.projectID},
@@ -71,7 +73,7 @@ router.put('/:projectID', async(req,res) =>{
 
 // GET ALL PROJECTS
 
-router.get('/', async (req,res) =>{
+router.get('/' ,verifyTokenAndAdmin,async (req,res) =>{
     try {
         const projects = await Project.find();
         res.json(projects);
@@ -80,11 +82,11 @@ router.get('/', async (req,res) =>{
     }
 })
 
-//GET ALL PROJECTS BY MANAGER_ID
+//GET ALL PROJECTS BY USER_ID
 
-router.get('/find/:manager_id', async (req, res) =>{
+router.get('/find/:user_id',verifyToken,async (req, res) =>{
     try {
-        const projects = await Project.find({ manager_id: {$in: req.params.manager_id}})
+        const projects = await Project.find({ manager_id: {$in: req.params.user_id}})
         res.json(projects);
     } catch (error) {
         res.json({
@@ -95,7 +97,7 @@ router.get('/find/:manager_id', async (req, res) =>{
 
 //ADD EMPLOYEE TO PROJECT
 
-router.patch('/add_employees/:projectID', async(req,res) =>{
+router.patch('/add_employees/:projectID', verifyTokenAndManagerAuthorization ,async(req,res) =>{
     try {
         const patched = await Project.findOneAndUpdate(
             {
@@ -111,33 +113,33 @@ router.patch('/add_employees/:projectID', async(req,res) =>{
     }
 }) 
 
-//ADD BUCKET TO PROJECT -- MOVE BUCKET TO
+//ADD BUCKET TO PROJECT -- Could implement move bucket
 
-router.patch('/add_buckets/:projectID', async(req,res) =>{
-    try {
-        const patched = await Project.updateOne(
-            {
-                _id: req.params.projectID
-            },
-            {
-                $addToSet: {buckets: req.body.bucket_ID}
-            },
-            {
-                new: true
-            }
-        )
-        res.json(patched);
+// router.patch('/add_buckets/:projectID', verifyTokenAndManagerAuthorization ,async(req,res) =>{
+//     try {
+//         const patched = await Project.updateOne(
+//             {
+//                 _id: req.params.projectID
+//             },
+//             {
+//                 $addToSet: {buckets: req.body.bucket_ID}
+//             },
+//             {
+//                 new: true
+//             }
+//         )
+//         res.json(patched);
         
-    } catch (error) {
-        res.json({
-            message: error
-        })
+//     } catch (error) {
+//         res.json({
+//             message: error
+//         })
         
-    }
-})
+//     }
+// })
 
 //GET ALL BUCKETS FOR PROJECT
-router.get('/:projectID', async(req,res)=>{
+router.get('/:projectID',verifyToken ,async(req,res)=>{
     try {
         const project = await Project.findById({
             _id: req.params.projectID
@@ -156,7 +158,7 @@ router.get('/:projectID', async(req,res)=>{
 })
 
 //DELETE USER FROM PROJECT
-router.patch('/remove_employees/:projectID', async(req,res) =>{
+router.patch('/remove_employees/:projectID', verifyTokenAndManagerAuthorization,async(req,res) =>{
     try {
         const patched = await Project.updateOne(
             {_id: req.params.projectID},

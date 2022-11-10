@@ -2,10 +2,11 @@ const router = require('express').Router();
 const User  = require("../models/User");
 const bcrypt = require('bcryptjs');
 const Task = require('../models/Task');
-const {registerValidation,passwordValidation} = require('../validation')
+const {registerValidation,passwordValidation} = require('../validation');
+const { verifyTokenAndAdmin } = require('./verifyToken');
 
 //CREATE USER
-router.post('/register', async (req,res) => {
+router.post('/register',verifyTokenAndAdmin ,async (req,res) => {
     //Validate before creating a user
     const {error} = registerValidation(req.body);
     if(error)
@@ -38,10 +39,10 @@ router.post('/register', async (req,res) => {
 })
 
 //UPDATE PASSWORD
-router.patch('/change_password/:userID', async(req,res)=>
+router.patch('/change_password/:userID', verifyTokenAndAdmin,async(req,res)=>
 {
     try {
-        const {error} = passwordValidation(req.body);
+        const {error} = passwordValidation(req.body.password);
         if(error)
             {
                 return res.status(400).send(error.details[0].message)
@@ -66,7 +67,7 @@ router.patch('/change_password/:userID', async(req,res)=>
 })
 
 //GET ALL USERS
-router.get('/', async(req, res) =>{
+router.get('/',verifyTokenAndAdmin ,async(req, res) =>{
     try {
         const users = await User.find();
         res.json(users);
@@ -78,7 +79,7 @@ router.get('/', async(req, res) =>{
 })
 
 //UPDATE USER DETAILS
-router.put('/:userID', async(req,res) =>{
+router.put('/:userID', verifyTokenAndAdmin,async(req,res) =>{
     try {
         if(req.body.hasOwnProperty('password'))
         {
@@ -98,7 +99,7 @@ router.put('/:userID', async(req,res) =>{
 })
 
 //DELETE USER 
-router.delete('/:userID', async(req,res) =>{
+router.delete('/:userID', verifyTokenAndAdmin,async(req,res) =>{
     try {
         const deletedUser = await User.findByIdAndDelete({
             _id: req.params.userID

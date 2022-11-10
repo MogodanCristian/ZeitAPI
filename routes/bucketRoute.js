@@ -4,9 +4,10 @@ const jwt = require('jsonwebtoken');
 const Project = require('../models/Project');
 const { bucketValidation } = require('../validation');
 const Task = require('../models/Task');
+const { verifyTokenAndAdmin, verifyTokenAndManagerAuthorization, verifyToken } = require('./verifyToken');
 
 //CREATE BUCKET
-router.post('/:projectID', async (req,res) =>{
+router.post('/:projectID',verifyTokenAndManagerAuthorization,async (req,res) =>{
     //BUCKET VALIDATION
     const {error} = bucketValidation(req.body);
     if(error)
@@ -38,7 +39,7 @@ router.post('/:projectID', async (req,res) =>{
 })
 
 //GET BUCKET DETAILS
-router.get('/:bucketID', async(req,res) =>{
+router.get('/:bucketID', verifyToken ,async(req,res) =>{
     try {
         const bucket = await Bucket.find({
             _id: req.params.bucketID
@@ -52,7 +53,7 @@ router.get('/:bucketID', async(req,res) =>{
 })
 
 //UPDATE DETAILS
-router.put('/:bucketID', async(req,res)=>{
+router.put('/:bucketID',verifyTokenAndManagerAuthorization,async(req,res)=>{
     try{
         const patched = await Bucket.findByIdAndUpdate(
         {_id: req.params.bucketID},
@@ -68,7 +69,7 @@ router.put('/:bucketID', async(req,res)=>{
     }
 })
 //GET ALL BUCKETS
-router.get('/', async(req,res)=>{
+router.get('/',verifyTokenAndAdmin,async(req,res)=>{
     try {
     const buckets = await Bucket.find();
     res.json(buckets);
@@ -78,7 +79,7 @@ router.get('/', async(req,res)=>{
 })
 
 //DELETE BUCKET
-router.delete('/:bucketID', async(req,res)=>{
+router.delete('/:bucketID', verifyTokenAndManagerAuthorization ,async(req,res)=>{
     try {
         const projectToUpdate = await Project.find({
             buckets: req.params.bucketID
@@ -110,30 +111,30 @@ router.delete('/:bucketID', async(req,res)=>{
 })
 
 //ADD TASK TO BUCKET
-router.patch('/add_task/:bucketID', async(req,res)=>{
-    try {
-        const patched = await Bucket.findByIdAndUpdate({
-            _id: req.params.bucketID
-        },
-        {
-            $addToSet:{
-                tasks: req.body.task_ID
-            }
-        },
-        {
-            new: true
-        });
-        res.json(patched);
-    } catch (error) {
-        res.json({
-            message: error
-        })
-    }
+// router.patch('/add_task/:bucketID', verifyTokenAndManagerAuthorization,async(req,res)=>{
+//     try {
+//         const patched = await Bucket.findByIdAndUpdate({
+//             _id: req.params.bucketID
+//         },
+//         {
+//             $addToSet:{
+//                 tasks: req.body.task_ID
+//             }
+//         },
+//         {
+//             new: true
+//         });
+//         res.json(patched);
+//     } catch (error) {
+//         res.json({
+//             message: error
+//         })
+//     }
     
-})
+// })
 
 //GET ALL TASKS FOR BUCKET
-router.get('/:bucketID', async(req,res)=>{
+router.get('/:bucketID', verifyToken ,async(req,res)=>{
     try {
         const bucket = await Bucket.findById({
             _id: req.params.bucketID
