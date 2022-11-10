@@ -41,7 +41,7 @@ router.post('/register', async (req,res) => {
 router.patch('/change_password/:userID', async(req,res)=>
 {
     try {
-        const {error} = passwordValidation(req.body);
+        const {error} = passwordValidation(req.body.password);
         if(error)
             {
                 return res.status(400).send(error.details[0].message)

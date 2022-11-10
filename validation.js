@@ -7,8 +7,8 @@ const joiPassword  = Joi.extend(joiPasswordExtendCore);
 //register validation
 const registerValidation = (data) => {
     const schema = Joi.object({
-        first_name: Joi.string().required().min(6).max(255),
-        last_name: Joi.string().required().min(6).max(255),
+        first_name: Joi.string().required().max(255),
+        last_name: Joi.string().required().max(255),
         email: Joi.string().required().email(),
         password: joiPassword.string()
         .minOfSpecialCharacters(1)

@@ -4,6 +4,7 @@ const Bucket = require('../models/Bucket');
 const jwt = require('jsonwebtoken');
 const{projectValidation} = require('../validation.js');
 const Task = require('../models/Task');
+const{verifyToken, verifyTokenAndManagerAuthorisation}=require('./verifyToken')
 
 //CREATE PROJECT
 router.post('/:managerID', async (req,res) =>{
@@ -71,8 +72,9 @@ router.put('/:projectID', async(req,res) =>{
 
 // GET ALL PROJECTS
 
-router.get('/', async (req,res) =>{
+router.get('/',verifyToken ,async (req,res) =>{
     try {
+        console.log(req.user.role)
         const projects = await Project.find();
         res.json(projects);
     } catch (error) {
@@ -82,9 +84,9 @@ router.get('/', async (req,res) =>{
 
 //GET ALL PROJECTS BY MANAGER_ID
 
-router.get('/find/:manager_id', async (req, res) =>{
+router.get('/find/:user_id', async (req, res) =>{
     try {
-        const projects = await Project.find({ manager_id: {$in: req.params.manager_id}})
+        const projects = await Project.find({ manager_id: {$in: req.params.user_id}})
         res.json(projects);
     } catch (error) {
         res.json({
@@ -95,7 +97,7 @@ router.get('/find/:manager_id', async (req, res) =>{
 
 //ADD EMPLOYEE TO PROJECT
 
-router.patch('/add_employees/:projectID', async(req,res) =>{
+router.patch('/add_employees/:projectID', verifyTokenAndManagerAuthorisation ,async(req,res) =>{
     try {
         const patched = await Project.findOneAndUpdate(
             {

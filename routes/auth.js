@@ -21,7 +21,9 @@ router.post('/login', async (req, res) =>{
     if(!validPassword) return res.status(400).send('Password is wrong!');
     
     //Create and assign a web token
-    const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET);
+    const token = jwt.sign({
+        _id: user._id,
+        role: user.role}, process.env.TOKEN_SECRET);
     res.header('auth-token', token).send(token).status(200);
 })
 
