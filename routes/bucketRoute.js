@@ -4,10 +4,10 @@ const jwt = require('jsonwebtoken');
 const Project = require('../models/Project');
 const { bucketValidation } = require('../validation');
 const Task = require('../models/Task');
-const { verifyTokenAndAdmin, verifyTokenAndManagerAuthorisation, verifyToken } = require('./verifyToken');
+const { verifyTokenAndAdmin, verifyTokenAndManagerAuthorization, verifyToken } = require('./verifyToken');
 
 //CREATE BUCKET
-router.post('/:projectID',verifyTokenAndManagerAuthorisation,async (req,res) =>{
+router.post('/:projectID',verifyTokenAndManagerAuthorization,async (req,res) =>{
     //BUCKET VALIDATION
     const {error} = bucketValidation(req.body);
     if(error)
@@ -53,7 +53,7 @@ router.get('/:bucketID', verifyToken ,async(req,res) =>{
 })
 
 //UPDATE DETAILS
-router.put('/:bucketID',verifyTokenAndManagerAuthorisation,async(req,res)=>{
+router.put('/:bucketID',verifyTokenAndManagerAuthorization,async(req,res)=>{
     try{
         const patched = await Bucket.findByIdAndUpdate(
         {_id: req.params.bucketID},
@@ -79,7 +79,7 @@ router.get('/',verifyTokenAndAdmin,async(req,res)=>{
 })
 
 //DELETE BUCKET
-router.delete('/:bucketID', verifyTokenAndManagerAuthorisation ,async(req,res)=>{
+router.delete('/:bucketID', verifyTokenAndManagerAuthorization ,async(req,res)=>{
     try {
         const projectToUpdate = await Project.find({
             buckets: req.params.bucketID
@@ -111,7 +111,7 @@ router.delete('/:bucketID', verifyTokenAndManagerAuthorisation ,async(req,res)=>
 })
 
 //ADD TASK TO BUCKET
-// router.patch('/add_task/:bucketID', verifyTokenAndManagerAuthorisation,async(req,res)=>{
+// router.patch('/add_task/:bucketID', verifyTokenAndManagerAuthorization,async(req,res)=>{
 //     try {
 //         const patched = await Bucket.findByIdAndUpdate({
 //             _id: req.params.bucketID

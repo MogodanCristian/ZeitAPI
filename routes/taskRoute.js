@@ -3,9 +3,10 @@ const Task = require('../models/Task');
 const jwt =  require('jsonwebtoken');
 const {taskValidation} = require('../validation')
 const Bucket = require('../models/Bucket');
+const { verifyTokenAndManagerAuthorization, verifyTokenAndAdmin } = require('./verifyToken');
 
 //CREATE TASK
-router.post('/:bucketID', async (req,res)=>{
+router.post('/:bucketID',verifyTokenAndManagerAuthorization ,async (req,res)=>{
     const {error} = taskValidation(req.body);
     if(error)
     {
@@ -44,7 +45,7 @@ router.post('/:bucketID', async (req,res)=>{
 })
 
 //ASSIGN TASK TO USER
-router.patch('/assign_task/:taskID', async(req, res)=>
+router.patch('/assign_task/:taskID', verifyTokenAndManagerAuthorization,async(req, res)=>
 {
     try {
         const patched = await Task.findByIdAndUpdate({
@@ -66,7 +67,7 @@ router.patch('/assign_task/:taskID', async(req, res)=>
 })
 
 //DELETE TASK
-router.delete('/:taskID', async(req,res)=>{
+router.delete('/:taskID', verifyTokenAndManagerAuthorization,async(req,res)=>{
     try {
         const bucketToUpdate = await Bucket.find({
             tasks: req.params.taskID
@@ -93,7 +94,7 @@ router.delete('/:taskID', async(req,res)=>{
 })
 
 //GET ALL TASKS
-router.get('/',async(req,res)=>{
+router.get('/',verifyTokenAndAdmin,async(req,res)=>{
     try {
         const tasks = await Task.find();
         res.json(tasks);
@@ -105,7 +106,7 @@ router.get('/',async(req,res)=>{
 })
 
 //UPDATE TASK DETAILS
-router.put('/:taskID', async(req,res) =>{
+router.put('/:taskID', verifyTokenAndManagerAuthorization,async(req,res) =>{
     try {
         const patched = await Task.findByIdAndUpdate({
             _id: req.params.taskID

@@ -1,4 +1,5 @@
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const Bucket = require('../models/Bucket');
 const Project = require('../models/Project')
 
 const verifyToken=async(req, res, next)=>{
@@ -15,7 +16,7 @@ const verifyToken=async(req, res, next)=>{
 
 const verifyTokenAndManager = (req,res,next) => {
   verifyToken(req,res,()=>{
-    if(req.user.role === "manager")
+    if(req.user.role === "manager" || req.user.role === "admin")
     {
       next();
     }
@@ -25,15 +26,15 @@ const verifyTokenAndManager = (req,res,next) => {
   })
 }
 //verifies if the user is a manager and if they can modify the project(only project managers can modify their own project) 
-const verifyTokenAndManagerAuthorisation=(req, res, next) => {
+const verifyTokenAndManagerAuthorization=(req, res, next) => {
         verifyToken(req, res, async() => {
           if(req.params.projectID){
             const project = await Project.findById(req.params.projectID);
-            if (req.user.role === "manager" && req.user._id == project.manager_id) {
+            if ((req.user.role === "manager" && req.user._id == project.manager_id) || req.user.role === "admin") {
                   next();
             } 
             else {
-              res.status(403).json("Only the manager that created the project is allowed to do that!");
+              res.status(403).json("Only the manager or admin that created the project is allowed to do that!");
             }
           }
           if(req.params.bucketID)
@@ -41,13 +42,27 @@ const verifyTokenAndManagerAuthorisation=(req, res, next) => {
             const project = await Project.find({
               buckets: req.params.bucketID
             })
-            console.log(project)
-            if(req.user.role === "manager" && req.user._id == project[0].manager_id)
+            if((req.user.role === "manager" && req.user._id == project[0].manager_id) || req.user.role === "admin")
             {
               next();
             }
             else{
-              res.status(403).json("Only the manager that created the bucket is allowed to do that!");
+              res.status(403).json("Only the manager or admin that created the bucket is allowed to do that!");
+            }
+          }
+          if(req.params.taskID){
+            const bucket = await Bucket.find({
+              tasks: req.params.taskID
+            })
+            const project = await Project.find({
+              buckets: bucket[0]._id
+            })
+            if((req.user.role === "manager" && req.user._id == project[0].manager_id) || req.user.role === "admin")
+            {
+              next();
+            }
+            else{
+              res.status(403).json("Only the manager or admin that created the task is allowed to do that!");
             }
           }
         });
@@ -65,7 +80,7 @@ const verifyTokenAndAdmin = (req, res, next) => {
       };
     module.exports = {
         verifyToken,
-        verifyTokenAndManagerAuthorisation,
+        verifyTokenAndManagerAuthorization,
         verifyTokenAndManager,
         verifyTokenAndAdmin
     }
