@@ -30,7 +30,7 @@ router.post('/:projectID',verifyTokenAndManagerAuthorization,async (req,res) =>{
             {
                 new: true
             })
-        res.json(patched)
+        res.json(savedBucket)
     } catch (error) {
         res.json({
             message: error

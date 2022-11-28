@@ -36,7 +36,7 @@ router.post('/:bucketID',verifyTokenAndManagerAuthorization ,async (req,res)=>{
                 new: true
             }
         )
-        res.json(patched);
+        res.json(savedTask);
     } catch (error) {
         res.json({
             message: error
@@ -45,26 +45,26 @@ router.post('/:bucketID',verifyTokenAndManagerAuthorization ,async (req,res)=>{
 })
 
 //ASSIGN TASK TO USER
-router.patch('/assign_task/:taskID', verifyTokenAndManagerAuthorization,async(req, res)=>
-{
-    try {
-        const patched = await Task.findByIdAndUpdate({
-            _id: req.params.taskID
-        },
-        {
-            assigned_to: req.body.assigned_to
-        },
-        {
-            new: true
-        }
-    );
-    res.json(patched);
-    } catch (error) {
-        res.json({
-            message: error
-        })
-    }
-})
+// router.patch('/assign_task/:taskID', verifyTokenAndManagerAuthorization,async(req, res)=>
+// {
+//     try {
+//         const patched = await Task.findByIdAndUpdate({
+//             _id: req.params.taskID
+//         },
+//         {
+//             assigned_to: req.body.assigned_to
+//         },
+//         {
+//             new: true
+//         }
+//     );
+//     res.json(patched);
+//     } catch (error) {
+//         res.json({
+//             message: error
+//         })
+//     }
+// })
 
 //DELETE TASK
 router.delete('/:taskID', verifyTokenAndManagerAuthorization,async(req,res)=>{
@@ -108,13 +108,31 @@ router.get('/',verifyTokenAndAdmin,async(req,res)=>{
 //UPDATE TASK DETAILS
 router.put('/:taskID', verifyTokenAndManagerAuthorization,async(req,res) =>{
     try {
-        const patched = await Task.findByIdAndUpdate({
+        const patched = await Task.findById({
             _id: req.params.taskID
-        },
+    })
+    if(patched.assigned_to == req.body.assisted_by)
+    {
+        return res.json("You cannot assist in a task you have been assigned!");
+    }
+    if(req.body.assisted_by || req.body.completed_by)
+    {
+        if(!patched.assigned_to)
         {
-            $set: req.body
+            return res.json("You cannot complete or assist in an unassigned task!");
+        }
+    }
+    if(req.body.assisted_by)
+    {
+        await patched.update({
+            $addToSet:{
+                assisted_by: req.body.assisted_by
+            }
         })
-        res.json(patched);
+         return res.json(patched);
+    }
+    await patched.update(req.body)
+    return res.json(patched);
     } catch (error) {
         res.json({
             message: error
