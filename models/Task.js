@@ -28,11 +28,11 @@ const taskSchema = mongoose.Schema({
         ref: 'User',
         default: null
     },
-    assisted_by: {
+    assisted_by: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         default: null
-    },
+    }],
     priority: {
         type: Number,
         required: true
