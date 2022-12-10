@@ -4,6 +4,7 @@ const app = express();
 const dotenv = require('dotenv')
 const mongoose = require('mongoose');
 const bodyparser = require('body-parser')
+const cors = require('cors')
 //import routes
 const authRoute = require('./routes/auth');
 const projectRoute = require('./routes/projectRoute');
@@ -21,6 +22,7 @@ mongoose.connect(process.env.DB_CONNECT,
 
 //Middlewares
 app.use(bodyparser.json());
+app.use(cors())
 
 //route middlewares
 app.use('/api/auth', authRoute);
