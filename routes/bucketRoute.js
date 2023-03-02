@@ -133,18 +133,21 @@ router.delete('/:bucketID', verifyTokenAndManagerAuthorization ,async(req,res)=>
     
 // })
 
-//GET ALL TASKS FOR BUCKET
-router.get('/:bucketID', verifyToken ,async(req,res)=>{
+
+
+router.get('/getBuckets/:projectID',verifyToken , async(req,res)=>{
+    console.log(req.params)
     try {
-        const bucket = await Bucket.findById({
-            _id: req.params.bucketID
+        const project = await Project.findById({
+            _id: req.params.projectID
         });
-        var tasks = [];
-        for(var i=0;i < bucket.tasks.length;i++){
-            const t = await Task.findById(bucket.tasks[i]);
-            tasks.push(t);
+        var buckets = [];
+        for(var i=0; i < project.buckets.length; i++){
+            const b = await Bucket.findById(project.buckets[i]);
+            buckets.push(b);
         }
-        res.json(tasks);
+        console.log(buckets)
+        res.json(buckets);
     } catch (error) {
         res.json({
             message: error
@@ -153,3 +156,9 @@ router.get('/:bucketID', verifyToken ,async(req,res)=>{
 })
 
 module.exports = router;
+
+//GET ALL BUCKETS FOR PROJECT
+
+
+
+//GET BUCKETS OF TASKS FOR EACH USER WITH THE CORESSPONDING TASK TITLES

@@ -39,7 +39,7 @@ router.post('/register',verifyTokenAndAdmin ,async (req,res) => {
 })
 
 //UPDATE PASSWORD
-router.patch('/change_password/:userID', verifyTokenAndAdmin,async(req,res)=>
+router.patch('/changePassword/:userID', verifyTokenAndAdmin,async(req,res)=>
 {
     try {
         const {error} = passwordValidation(req.body.password);
