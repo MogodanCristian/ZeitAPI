@@ -83,10 +83,11 @@ router.get('/' ,verifyTokenAndAdmin,async (req,res) =>{
 })
 
 //GET ALL PROJECTS BY USER_ID
-
 router.get('/find/:user_id',verifyToken,async (req, res) =>{
     try {
-        const projects = await Project.find({ manager_id: {$in: req.params.user_id}})
+        const projects = await Project.find({ 
+            employees: {$in: req.params.user_id}
+        })
         res.json(projects);
     } catch (error) {
         res.json({
@@ -97,7 +98,7 @@ router.get('/find/:user_id',verifyToken,async (req, res) =>{
 
 //ADD EMPLOYEE TO PROJECT
 
-router.patch('/add_employees/:projectID', verifyTokenAndManagerAuthorization ,async(req,res) =>{
+router.patch('/addEmployee/:projectID', verifyTokenAndManagerAuthorization ,async(req,res) =>{
     try {
         const patched = await Project.findOneAndUpdate(
             {
@@ -138,27 +139,9 @@ router.patch('/add_employees/:projectID', verifyTokenAndManagerAuthorization ,as
 //     }
 // })
 
-//GET ALL BUCKETS FOR PROJECT
-router.get('/:projectID',verifyToken ,async(req,res)=>{
-    try {
-        const project = await Project.findById({
-            _id: req.params.projectID
-        });
-        var buckets = [];
-        for(var i=0; i < project.buckets.length; i++){
-            const b = await Bucket.findById(project.buckets[i]);
-            buckets.push(b);
-        }
-        res.json(buckets);
-    } catch (error) {
-        res.json({
-            message: error
-        })
-    }
-})
 
 //DELETE USER FROM PROJECT
-router.patch('/remove_employees/:projectID', verifyTokenAndManagerAuthorization,async(req,res) =>{
+router.patch('/removeEmployee/:projectID', verifyTokenAndManagerAuthorization,async(req,res) =>{
     try {
         const patched = await Project.updateOne(
             {_id: req.params.projectID},

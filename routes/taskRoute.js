@@ -3,7 +3,7 @@ const Task = require('../models/Task');
 const jwt =  require('jsonwebtoken');
 const {taskValidation} = require('../validation')
 const Bucket = require('../models/Bucket');
-const { verifyTokenAndManagerAuthorization, verifyTokenAndAdmin } = require('./verifyToken');
+const { verifyTokenAndManagerAuthorization, verifyTokenAndAdmin, verifyToken } = require('./verifyToken');
 
 //CREATE TASK
 router.post('/:bucketID',verifyTokenAndManagerAuthorization ,async (req,res)=>{
@@ -37,6 +37,25 @@ router.post('/:bucketID',verifyTokenAndManagerAuthorization ,async (req,res)=>{
             }
         )
         res.json(savedTask);
+    } catch (error) {
+        res.json({
+            message: error
+        })
+    }
+})
+
+//GET ALL TASKS FOR BUCKET
+router.get('/getTasks/:bucketID', verifyToken ,async(req,res)=>{
+    try {
+        const bucket = await Bucket.findById({
+            _id: req.params.bucketID
+        });
+        var tasks = [];
+        for(var i=0;i < bucket.tasks.length;i++){
+            const t = await Task.findById(bucket.tasks[i]);
+            tasks.push(t);
+        }
+        res.json(tasks);
     } catch (error) {
         res.json({
             message: error
@@ -140,3 +159,4 @@ router.put('/:taskID', verifyTokenAndManagerAuthorization,async(req,res) =>{
     }
 })
 module.exports = router;
+
