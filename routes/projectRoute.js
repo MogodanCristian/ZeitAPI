@@ -18,6 +18,8 @@ router.post('/:managerID', verifyTokenAndManager ,async (req,res) =>{
         title : req.body.title,
         description : req.body.description,
         manager_id : req.params.managerID,
+        start_date: req.body.start_date,
+        end_date: req.body.end_date
     });
     project.employees.push(req.params.managerID);
     try {
