@@ -2,8 +2,9 @@ const router = require('express').Router();
 const User  = require("../models/User");
 const bcrypt = require('bcryptjs');
 const Task = require('../models/Task');
+const Project = require('../models/Project');
 const {registerValidation,passwordValidation} = require('../validation');
-const { verifyTokenAndAdmin } = require('./verifyToken');
+const { verifyTokenAndAdmin, verifyTokenAndManager} = require('./verifyToken');
 
 //CREATE USER
 router.post('/register',verifyTokenAndAdmin ,async (req,res) => {
@@ -67,7 +68,7 @@ router.patch('/changePassword/:userID', verifyTokenAndAdmin,async(req,res)=>
 })
 
 //GET ALL USERS
-router.get('/',verifyTokenAndAdmin ,async(req, res) =>{
+router.get('/', verifyTokenAndManager,async(req, res) =>{
     try {
         const users = await User.find();
         res.json(users);
@@ -183,5 +184,32 @@ router.get('/performance/:userID', async(req,res) =>{
         })
     }
 })
+
+//GET ALL THE USERS NOT IN  A PROJECT CURRENTLY
+
+router.get('/availableEmployees/:projectID', async (req, res) => {
+    const { projectId } = req.params;
+  
+    try {
+
+      const project = await Project.findById(req.params.projectID);
+  
+      if (!project) {
+        return res.status(404).json({ message: 'Project not found' });
+      }
+  
+      const availableEmployees = await User.find({
+        _id: { $nin: project.employees },
+        role: {$ne: 'admin'}
+      });
+  
+      res.status(200).json(availableEmployees);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  module.exports = router;
 module.exports = router;
 

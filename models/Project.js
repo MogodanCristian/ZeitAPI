@@ -1,5 +1,4 @@
 const mongoose =  require('mongoose');
-const Bucket = require('./Bucket')
 
 const projectSchema =  new mongoose.Schema({
     title: {
