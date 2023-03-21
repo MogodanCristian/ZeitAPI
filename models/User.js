@@ -37,7 +37,10 @@ const userSchema = new mongoose.Schema({
             "employee",
             "manager"
         ]
-    }
+    },
+    // started_working: {
+
+    // }
 });
 
 module.exports = mongoose.model('User',userSchema);

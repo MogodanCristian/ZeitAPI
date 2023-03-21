@@ -4,7 +4,8 @@ const Bucket = require('../models/Bucket');
 const jwt = require('jsonwebtoken');
 const{projectValidation} = require('../validation.js');
 const Task = require('../models/Task');
-const{verifyToken, verifyTokenAndManagerAuthorization,verifyTokenAndManager, verifyTokenAndAdmin}=require('./verifyToken')
+const{verifyToken, verifyTokenAndManagerAuthorization,verifyTokenAndManager, verifyTokenAndAdmin}=require('./verifyToken');
+const User = require('../models/User');
 
 //CREATE PROJECT
 router.post('/:managerID', verifyTokenAndManager ,async (req,res) =>{
@@ -150,6 +151,26 @@ router.patch('/removeEmployee/:projectID', verifyTokenAndManagerAuthorization,as
             {$pull: {employees: req.body.employee_id}},
             {new: true});
         res.json(patched);
+    } catch (error) {
+        res.json({
+            message: error
+        })
+    }
+})
+
+router.get('/:projectID/employees', verifyToken, async(req, res)=>{
+    try {
+        const project = await Project.find(
+            {_id: req.params.projectID}
+        )
+        let arr = []
+        const promises = project[0].employees.map(async(employee) => {
+            const e = await User.findById(employee);
+            return e;
+        });
+        arr = await Promise.all(promises);
+        res.json(arr)
+        
     } catch (error) {
         res.json({
             message: error
