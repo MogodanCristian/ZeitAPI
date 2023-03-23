@@ -178,5 +178,21 @@ router.get('/:projectID/employees', verifyToken, async(req, res)=>{
     }
 })
 
+router.get('/:projectID', verifyToken, async(req, res) =>{
+    try {
+        const project = await Project.findById(
+            {
+                _id: req.params.projectID
+            }
+        )
+        res.json(project)
+    } catch (error) {
+        res.json({
+            message: error
+        })
+        
+    }
+})
+
 //implementare de vizualizare a progresului
 module.exports = router;
