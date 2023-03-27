@@ -25,7 +25,7 @@ router.post('/:managerID', verifyTokenAndManager ,async (req,res) =>{
     project.employees.push(req.params.managerID);
     try {
         const savedProject = await project.save();
-        res.send({project: savedProject._id});
+        res.json(savedProject)
     } catch (error) {
         res.status(400).send(error);
     }
@@ -175,6 +175,22 @@ router.get('/:projectID/employees', verifyToken, async(req, res)=>{
         res.json({
             message: error
         })
+    }
+})
+
+router.get('/:projectID', verifyToken, async(req, res) =>{
+    try {
+        const project = await Project.findById(
+            {
+                _id: req.params.projectID
+            }
+        )
+        res.json(project)
+    } catch (error) {
+        res.json({
+            message: error
+        })
+        
     }
 })
 
