@@ -52,8 +52,7 @@ const bucketValidation = (data) =>{
 const taskValidation = (data) =>{
     const schema = Joi.object({
         title: Joi.string().required(),
-        description: Joi.string().required(),
-        priority: Joi.number().required(),
+        priority: Joi.string().required(),
     }).options({ stripUnknown : true });
     return schema.validate(data);
 }

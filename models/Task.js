@@ -8,7 +8,6 @@ const taskSchema = mongoose.Schema({
     },
     description: {
         type: String,
-        required: true,
     },
     created_at: {
         type: Date,
@@ -17,11 +16,9 @@ const taskSchema = mongoose.Schema({
     start_date: [{
         type: Date,
         default: Date.now,
-        required: true
     }],
     end_date: [{
         type: Date,
-        required: true
     }],
     completed_by: {
         type: mongoose.Schema.Types.ObjectId,
@@ -37,10 +34,10 @@ const taskSchema = mongoose.Schema({
         type: String,
         default: "low",
         enum: [
-            "low",
-            "medium",
-            "high",
-            "urgent"
+            "Low",
+            "Medium",
+            "High",
+            "Urgent"
         ]
     },
     previous: {

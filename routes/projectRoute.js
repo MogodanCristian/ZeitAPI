@@ -25,7 +25,7 @@ router.post('/:managerID', verifyTokenAndManager ,async (req,res) =>{
     project.employees.push(req.params.managerID);
     try {
         const savedProject = await project.save();
-        res.send({project: savedProject._id});
+        res.json(savedProject)
     } catch (error) {
         res.status(400).send(error);
     }

@@ -16,7 +16,6 @@ router.post('/:bucketID',verifyTokenAndManagerAuthorization ,async (req,res)=>{
     var end = req.body.end_date;
     const task = new Task({
         title: req.body.title,
-        description: req.body.description,
         priority: req.body.priority
     })
     task.start_date.push(start);
