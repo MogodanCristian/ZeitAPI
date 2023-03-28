@@ -200,7 +200,7 @@ router.get('/availableEmployees/:projectID', async (req, res) => {
   
       const availableEmployees = await User.find({
         _id: { $nin: project.employees },
-        role: {$ne: 'admin'}
+        role: {$ne: ['admin', 'manager']}
       });
   
       res.status(200).json(availableEmployees);
@@ -210,6 +210,5 @@ router.get('/availableEmployees/:projectID', async (req, res) => {
     }
   });
   
-  module.exports = router;
 module.exports = router;
 
