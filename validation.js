@@ -3,6 +3,7 @@
 const Joi = require('@hapi/joi');
 const {joiPasswordExtendCore} = require('joi-password');
 const joiPassword  = Joi.extend(joiPasswordExtendCore);
+const { Types } = require('mongoose');
 
 //register validation
 const registerValidation = (data) => {
@@ -57,6 +58,22 @@ const taskValidation = (data) =>{
     return schema.validate(data);
 }
 
+const messageValidation = (data) =>{
+    const objectId = Joi.string().custom((value, helpers) => {
+        if (!Types.ObjectId.isValid(value)) {
+          return helpers.error('any.invalid');
+        }
+        return value;
+      }, 'Object ID validation');
+
+    const schema = Joi.object({
+        subject: Joi.string().required(),
+        body: Joi.string().required(),
+        sender: objectId.required(),
+        receiver: objectId.required()
+    });
+    return schema.validate(data)
+}
 
 const passwordValidation = (data) =>{
     const schema = Joi.object({
@@ -77,3 +94,4 @@ module.exports.projectValidation = projectValidation;
 module.exports.bucketValidation = bucketValidation;
 module.exports.taskValidation = taskValidation;
 module.exports.passwordValidation = passwordValidation;
+module.exports.messageValidation = messageValidation;
