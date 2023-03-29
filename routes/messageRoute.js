@@ -24,4 +24,19 @@ router.post('/', verifyToken, async(req,res) =>{
     }
 })
 
+router.get('/:userID', verifyToken, async (req, res) => {
+    try {
+      const messages = await Message.find({
+        $or: [
+          { sender: req.params.userID },
+          { receiver: req.params.userID }
+        ]
+      });
+      res.status(200).json(messages);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
 module.exports = router;
