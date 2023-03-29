@@ -188,7 +188,6 @@ router.get('/performance/:userID', async(req,res) =>{
 //GET ALL THE USERS NOT IN  A PROJECT CURRENTLY
 
 router.get('/availableEmployees/:projectID', async (req, res) => {
-    const { projectId } = req.params;
   
     try {
 
@@ -200,7 +199,7 @@ router.get('/availableEmployees/:projectID', async (req, res) => {
   
       const availableEmployees = await User.find({
         _id: { $nin: project.employees },
-        role: {$ne: ['admin', 'manager']}
+        role: {$ne: 'admin'}
       });
   
       res.status(200).json(availableEmployees);
