@@ -111,6 +111,18 @@ router.delete('/:taskID', verifyTokenAndManagerAuthorization,async(req,res)=>{
     }
 })
 
+router.get('/:taskID', verifyToken, async(req, res) =>{
+    try {
+        const task = await Task.find({
+            _id: req.params.taskID
+        })
+        res.json(task).status(200)
+
+    } catch (error) {
+        res.json(error)
+    }
+})
+
 //GET ALL TASKS
 router.get('/',verifyTokenAndAdmin,async(req,res)=>{
     try {
