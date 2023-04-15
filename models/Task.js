@@ -32,12 +32,22 @@ const taskSchema = mongoose.Schema({
     }],
     priority: {
         type: String,
-        default: "low",
+        default: "Low",
         enum: [
             "Low",
             "Medium",
             "High",
             "Urgent"
+        ]
+    },
+    progress:{
+        type: String,
+        default: "Not Started",
+        enum: [
+            "Not Started",
+            "In Progress",
+            "Stuck",
+            "Done"
         ]
     },
     previous: {
@@ -46,14 +56,8 @@ const taskSchema = mongoose.Schema({
         default: null
     },
     cost:{
-        type: Number
-    },
-    started_working:{
-        type: Date,
-        default: Date.now
-    },
-    finished_working:{
-        type: Date
+        type: Number,
+        default:0
     },
     assigned_to:{
         type: mongoose.Schema.Types.ObjectId,
