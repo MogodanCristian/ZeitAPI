@@ -38,9 +38,10 @@ const userSchema = new mongoose.Schema({
             "manager"
         ]
     },
-    // started_working: {
-
-    // }
+    first_login:{
+        type: Boolean,
+        default: true
+    },
 });
 
 module.exports = mongoose.model('User',userSchema);

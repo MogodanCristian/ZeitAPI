@@ -34,6 +34,10 @@ const projectSchema =  new mongoose.Schema({
         required: true,
         default: Date.now,
     },
+    has_problems:{
+        type:Boolean,
+        default:false,
+    }
 })
 
 module.exports = mongoose.model('Project', projectSchema);
