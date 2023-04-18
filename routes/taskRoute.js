@@ -141,7 +141,7 @@ router.put('/:taskID', verifyTokenAndManagerAuthorization,async(req,res) =>{
         const patched = await Task.findById({
             _id: req.params.taskID
     })
-    if(patched.assigned_to == req.body.assisted_by)
+    if(patched.assigned_to == req.body.assisted_by && req.body.assisted_by!=null)
     {
         return res.json("You cannot assist in a task you have been assigned!");
     }
