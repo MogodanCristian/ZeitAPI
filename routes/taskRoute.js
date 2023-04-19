@@ -136,7 +136,7 @@ router.get('/',verifyTokenAndAdmin,async(req,res)=>{
 })
 
 //UPDATE TASK DETAILS
-router.put('/:taskID', verifyTokenAndManagerAuthorization,async(req,res) =>{
+router.put('/:taskID', verifyToken,async(req,res) =>{
     try {
         const patched = await Task.findById({
             _id: req.params.taskID
