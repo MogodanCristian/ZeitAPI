@@ -209,7 +209,17 @@ router.get('/availableEmployees/:projectID', async (req, res) => {
     }
   });
 
-
+//GET SPECIFIC USER DETAILS
+router.get('/getDetails/:userID', async(req, res) =>{
+    try 
+    {
+       const user = await User.findById(req.params.userID)
+       return res.status(200).json(user);
+    } 
+    catch (error) {
+        res.status(400).json({message: error})
+    }
+})
   
 module.exports = router;
 
