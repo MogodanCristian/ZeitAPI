@@ -32,7 +32,6 @@ router.post('/:managerID', verifyTokenAndManager ,async (req,res) =>{
 });
 
 //DELETE PROJECT 
-
 router.delete('/:projectID', verifyTokenAndManagerAuthorization,async(req, res) =>{
     try {
         const projectToRemove = await Project.findById({_id : req.params.projectID});
@@ -158,6 +157,8 @@ router.patch('/removeEmployee/:projectID', verifyTokenAndManagerAuthorization,as
     }
 })
 
+//GET ALL EMPLOYEES IN A PROJECT
+
 router.get('/:projectID/employees', verifyToken, async(req, res)=>{
     try {
         const project = await Project.find(
@@ -177,6 +178,8 @@ router.get('/:projectID/employees', verifyToken, async(req, res)=>{
         })
     }
 })
+
+//GET SPECIFIC PROJECT DETAILS
 
 router.get('/:projectID', verifyToken, async(req, res) =>{
     try {

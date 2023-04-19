@@ -151,17 +151,27 @@ router.put('/:taskID', verifyTokenAndManagerAuthorization,async(req,res) =>{
         {
             return res.json("You cannot complete or assist in an unassigned task!");
         }
+        if(patched.previous)
+        {
+            const previous = await Task.findById({
+                _id: patched.previous
+            })
+            if(previous.progress != "Done")
+            {
+                return res.json("You must complete the previous task first!")
+            }
+        }
     }
     if(req.body.assisted_by)
     {
-        await patched.update({
+        await patched.updateOne({
             $addToSet:{
                 assisted_by: req.body.assisted_by
             }
         })
          return res.json(patched);
     }
-    await patched.update(req.body)
+    await patched.updateOne(req.body)
     return res.json(patched);
     } catch (error) {
         res.json({
