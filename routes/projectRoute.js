@@ -196,6 +196,27 @@ router.get('/:projectID', verifyToken, async(req, res) =>{
         
     }
 })
+router.get('/getAvailableEmployees/:projectID', async(req, res) =>{
+    const projectID = req.params.projectID;
 
+    try {
+      // Find the project with the given ID
+      const project = await Project.findById(projectID).populate('employees');
+  
+      if (!project) {
+        // Project not found
+        return res.status(404).json({ message: 'Project not found' });
+      }
+  
+      // Filter the users that have the is_working field set to false
+      const availableEmployees = project.employees.filter(user => !user.is_working);
+  
+      // Return the available employees
+      res.json(availableEmployees);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+})
 //implementare de vizualizare a progresului
 module.exports = router;
