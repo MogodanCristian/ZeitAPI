@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const Task = require('../models/Task');
 const Project = require('../models/Project');
 const {registerValidation,passwordValidation} = require('../validation');
-const { verifyTokenAndAdmin, verifyTokenAndManager} = require('./verifyToken');
+const {verifyToken,verifyTokenAndAdmin, verifyTokenAndManager} = require('./verifyToken');
 
 //CREATE USER
 router.post('/register',verifyTokenAndAdmin ,async (req,res) => {
@@ -80,7 +80,7 @@ router.get('/', verifyTokenAndManager,async(req, res) =>{
 })
 
 //UPDATE USER DETAILS
-router.put('/:userID', verifyTokenAndAdmin,async(req,res) =>{
+router.put('/:userID', verifyToken,async(req,res) =>{
     try {
         if(req.body.hasOwnProperty('password'))
         {

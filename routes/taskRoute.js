@@ -3,6 +3,7 @@ const Task = require('../models/Task');
 const jwt =  require('jsonwebtoken');
 const {taskValidation} = require('../validation')
 const Bucket = require('../models/Bucket');
+const Project = require('../models/Project')
 const { verifyTokenAndManagerAuthorization, verifyTokenAndAdmin, verifyToken } = require('./verifyToken');
 
 //CREATE TASK
@@ -179,5 +180,32 @@ router.put('/:taskID', verifyToken,async(req,res) =>{
         })
     }
 })
+
+//GET THE PROJECT CONTAINING THE TASK
+router.get('/getProject/:taskID', async(req,res) =>{
+    const taskId = req.params.taskID;
+
+  try {
+    const task = await Task.findById(taskId);
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    const bucket = await Bucket.findOne({ tasks: taskId });
+
+    if (!bucket) {
+      return res.status(404).json({ message: 'Bucket not found' });
+    }
+    const project = await Project.findOne({ buckets: bucket._id });
+
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    res.json(project);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 module.exports = router;
 
