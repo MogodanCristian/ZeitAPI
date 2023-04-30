@@ -5,7 +5,7 @@ const {taskValidation} = require('../validation')
 const Bucket = require('../models/Bucket');
 const Project = require('../models/Project')
 const { verifyTokenAndManagerAuthorization, verifyTokenAndAdmin, verifyToken } = require('./verifyToken');
-
+const axios = require('axios');
 //CREATE TASK
 router.post('/:bucketID',verifyTokenAndManagerAuthorization ,async (req,res)=>{
     const {error} = taskValidation(req.body);
@@ -207,5 +207,71 @@ router.get('/getProject/:taskID', async(req,res) =>{
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+//GET SUGGESTED EMPLOYEE
+
+const priorityEnum = ["Low", "Medium", "High", "Urgent"];
+const difficultyEnum = ["easy", "medium", "hard", "very hard"];
+
+function calculateScore(priority, difficulty) {
+    const priorityValue = priorityEnum.indexOf(priority) + 1;
+    const difficultyValue = difficultyEnum.indexOf(difficulty) + 1;
+    return priorityValue * difficultyValue;
+  }
+  
+  // Define a function to calculate the performance level based on the score
+  function calculatePerformanceLevel(score) {
+    if (score >= 1 && score < 4) {
+      return "Low performance";
+    } else if (score >= 4 && score < 9) {
+      return "Medium performance";
+    } else if (score >= 9 && score <= 16) {
+      return "High performance";
+    }
+  }
+
+  router.get('/getRecommendedEmployee/:taskID', async(req,res) =>{
+    const taskId = req.params.taskID;
+
+    try {
+        let project = await axios.get('http://localhost:3000/api/tasks/getProject/' + taskId);
+        project = project.data
+        const projectEmployees = await Project.findById(project._id).populate('employees');
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
+        const availableEmployees = projectEmployees.employees.filter(user => !user.is_working);
+        const score = calculateScore(req.body.priority, req.body.difficulty)
+        const performanceLevel = calculatePerformanceLevel(score)
+        const employeesWithPerformance = await Promise.all(availableEmployees.map(async employee => {
+            const response = await axios.get('http://localhost:3000/api/users/performance/'+employee._id);
+            const employeeWithPerformance = {
+                ...employee.toObject(),
+                performance: response.data
+            };
+            return employeeWithPerformance;
+        }));
+        let suggestedEmployee = employeesWithPerformance.filter(employee => performanceLevel === employee.performance)
+        if(suggestedEmployee.length === 0)
+        {
+            const higherPerformanceEmployees = employeesWithPerformance.filter(employee => employee.performance > performanceLevel);
+            if (higherPerformanceEmployees.length > 0) {
+                suggestedEmployee = higherPerformanceEmployees.sort((a, b) => b.performance - a.performance)[0];
+            }
+            else{
+                suggestedEmployee = employeesWithPerformance.sort((a, b) => b.performance - a.performance)[0];
+            }
+        }
+        if(!suggestedEmployee) {
+            return res.status(404).json({ message: 'No employee found' });
+          } 
+        else {
+            return res.status(200).json(suggestedEmployee);
+          }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+})
 module.exports = router;
 

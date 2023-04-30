@@ -122,68 +122,64 @@ router.delete('/:userID', verifyTokenAndAdmin,async(req,res) =>{
 })
 
 //GET USER PERFORMANCE
-router.get('/performance/:userID', async(req,res) =>{
+router.get('/performance/:userID', async (req, res) => {
     try {
-        const tasks_completed = await Task.find({
-            completed_by: req.params.userID
-        })
-        const tasks_assisted = await Task.find({
-            assisted_by: req.params.userID
-        })
-        var completedCounter = [0,0,0,0];
-        var assistedCounter = [0,0,0,0];
-        for(var i=0;i<tasks_completed.length;i++)
-        {
-            if(tasks_completed[i].difficulty === "easy"){
-                completedCounter[0]++
-            }
-            else if(tasks_completed[i].difficulty === "medium")
-            {
-                completedCounter[1]++;
-            }
-            else if(tasks_completed[i].difficulty === "hard"){
-                completedCounter[2]++;
-            }
-            else if(tasks_completed[i].difficulty === "very hard"){
-                completedCounter[3]++;
-            }
+      const tasks_completed = await Task.find({ completed_by: req.params.userID });
+      const tasks_assisted = await Task.find({ assisted_by: req.params.userID });
+      var completedCounter = [0, 0, 0, 0];
+      var assistedCounter = [0, 0, 0, 0];
+      for (var i = 0; i < tasks_completed.length; i++) {
+        if (tasks_completed[i].difficulty === 'easy') {
+          completedCounter[0]++;
+        } else if (tasks_completed[i].difficulty === 'medium') {
+          completedCounter[1]++;
+        } else if (tasks_completed[i].difficulty === 'hard') {
+          completedCounter[2]++;
+        } else if (tasks_completed[i].difficulty === 'very hard') {
+          completedCounter[3]++;
         }
-        for(var i=0;i<tasks_assisted.length;i++)
-        {
-            if(tasks_assisted[i].difficulty === "easy"){
-                completedCounter[0]++
-            }
-            else if(tasks_assisted[i].difficulty === "medium")
-            {
-                completedCounter[1]++;
-            }
-            else if(tasks_assisted[i].difficulty === "hard"){
-                completedCounter[2]++;
-            }
-            else if(tasks_assisted[i].difficulty === "very hard"){
-                completedCounter[3]++;
-            }
+      }
+      for (var i = 0; i < tasks_assisted.length; i++) {
+        if (tasks_assisted[i].difficulty === 'easy') {
+          assistedCounter[0]++;
+        } else if (tasks_assisted[i].difficulty === 'medium') {
+          assistedCounter[1]++;
+        } else if (tasks_assisted[i].difficulty === 'hard') {
+          assistedCounter[2]++;
+        } else if (tasks_assisted[i].difficulty === 'very hard') {
+          assistedCounter[3]++;
         }
-        res.json({
-            tasks_completed: {
-                easy: completedCounter[0],
-                medium: completedCounter[1], 
-                hard: completedCounter[2],
-                very_hard: completedCounter[3]
-            },
-            tasks_assisted:{
-                easy: assistedCounter[0],
-                medium: assistedCounter[1], 
-                hard: assistedCounter[2],
-                very_hard: assistedCounter[3]
-            }
-        })
+      }
+      var performanceCount = [0, 0, 0, 0];
+      for (var i = 0; i < 4; i++) {
+        performanceCount[i] = assistedCounter[i] + completedCounter[i];
+      }
+      if (performanceCount.every(count => count === 0)) {
+        res.json('Low performance');
+      }
+      else if (performanceCount[0] + performanceCount[1] > performanceCount[1] + performanceCount[2] && 
+          performanceCount[0] + performanceCount[1] > performanceCount[2] + performanceCount[3]) {
+        res.json('Low performance');
+      } else if (performanceCount[1] + performanceCount[2] > performanceCount[0] + performanceCount[1] && 
+                 performanceCount[1] + performanceCount[2] > performanceCount[2] + performanceCount[3]) {
+        res.json('Medium performance');
+      } else if (performanceCount[2] + performanceCount[3] > performanceCount[0] + performanceCount[1] && 
+                 performanceCount[2] + performanceCount[3] > performanceCount[1] + performanceCount[2]) {
+        res.json('High performance');
+      }
+      else if(performanceCount[0] + performanceCount[1] === performanceCount[1]+ performanceCount[2]){
+        res.json('Medium performance');
+      }
+      else if(performanceCount[1] + performanceCount[2] === performanceCount[2]+ performanceCount[3]){
+        res.json('High performance');
+      }
+      else if(performanceCount[0] + performanceCount[1] === performanceCount[2]+ performanceCount[3]){
+        res.json('High performance');
+      }
     } catch (error) {
-        res.json({
-            message: error
-        })
+      res.json({ message: error });
     }
-})
+  });
 
 //GET ALL THE USERS NOT IN  A PROJECT CURRENTLY
 
