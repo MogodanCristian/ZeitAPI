@@ -26,6 +26,7 @@ router.post('/login', async (req, res) =>{
         first_name: user.first_name,
         last_name: user.last_name,
         role: user.role,
+        first_login:user.first_login
         }, process.env.TOKEN_SECRET);
     res.header('auth-token', token).send(token).status(200);
 })

@@ -69,8 +69,7 @@ const messageValidation = (data) =>{
     const schema = Joi.object({
         subject: Joi.string().required(),
         body: Joi.string().required(),
-        sender: objectId.required(),
-        receiver: objectId.required()
+        user: objectId.required(),
     });
     return schema.validate(data)
 }
@@ -84,6 +83,7 @@ const passwordValidation = (data) =>{
         .minOfNumeric(1)
         .noWhiteSpaces()
         .min(8)
+    .required(),
     });
     return schema.validate(data);
 }

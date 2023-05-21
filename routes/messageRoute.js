@@ -13,8 +13,7 @@ router.post('/', verifyToken, async(req,res) =>{
     var message = new Message({
         subject: req.body.subject,
         body: req.body.body,
-        sender: req.body.sender,
-        receiver: req.body.receiver
+        user:req.body.user
     })
     try {
         const savedMessage = await message.save()
@@ -27,10 +26,7 @@ router.post('/', verifyToken, async(req,res) =>{
 router.get('/:userID', verifyToken, async (req, res) => {
     try {
       const messages = await Message.find({
-        $or: [
-          { sender: req.params.userID },
-          { receiver: req.params.userID }
-        ]
+        user:req.params.userID
       });
       res.status(200).json(messages);
     } catch (error) {

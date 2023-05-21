@@ -218,5 +218,81 @@ router.get('/getAvailableEmployees/:projectID', async(req, res) =>{
       res.status(500).json({ message: 'Internal server error' });
     }
 })
-//implementare de vizualizare a progresului
+
+router.get('/:projectID/tasksData', async (req, res) => {
+    const projectId = req.params.projectID;
+    try {
+      const project = await Project.findById(projectId).populate({
+        path: 'buckets',
+        populate: {
+          path: 'tasks',
+          model: 'Task',
+          populate: {
+            path: 'assigned_to',
+            model: 'User',
+            select: 'first_name last_name'
+          }
+        }
+      });
+  
+      const employees = {};
+      for (const bucket of project.buckets) {
+        for (const task of bucket.tasks) {
+          if (task.assigned_to) {
+            const employeeName = `${task.assigned_to.first_name} ${task.assigned_to.last_name}`;
+            if (!employees[employeeName]) {
+              employees[employeeName] = {
+                easy: 0,
+                medium: 0,
+                hard: 0,
+                'very hard': 0
+              };
+            }
+            employees[employeeName][task.difficulty]++;
+          }
+        }
+      }
+      res.json(employees);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to retrieve employee tasks' });
+    }
+  });
+
+  router.get('/:projectID/checkStuckTask', async (req, res) => {
+    const projectId = req.params.projectID;
+  
+    try {
+      const project = await Project.findById(projectId).populate({
+        path: 'buckets',
+        populate: { path: 'tasks' }
+      });
+  
+      for (const bucket of project.buckets) {
+        const stuckTask = bucket.tasks.find(task => task.progress === 'Stuck');
+        if (stuckTask) {
+          return res.json({ hasStuckTask: true });
+        }
+      }
+  
+      res.json({ hasStuckTask: false });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to check for stuck task' });
+    }
+  });
+
+
+router.get('/:projectTitle/getManager', async (req, res) => {
+    try {
+    const project = await Project.findOne({ title: req.params.projectTitle })
+    if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+    }
+    res.json({ manager_id: project.manager_id});
+    } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to get manager' });
+    }
+});
 module.exports = router;

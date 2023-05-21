@@ -5,6 +5,7 @@ const Task = require('../models/Task');
 const Project = require('../models/Project');
 const {registerValidation,passwordValidation} = require('../validation');
 const {verifyToken,verifyTokenAndAdmin, verifyTokenAndManager} = require('./verifyToken');
+const {sendMailTo} = require('../utils/sendMail')
 
 //CREATE USER
 router.post('/register',verifyTokenAndAdmin ,async (req,res) => {
@@ -21,8 +22,7 @@ router.post('/register',verifyTokenAndAdmin ,async (req,res) => {
     }
     //Hash the password
     const salt=await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(req.body.password, salt);
-
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);  
     //create user
     const user = new User({
         first_name: req.body.first_name,
@@ -32,18 +32,25 @@ router.post('/register',verifyTokenAndAdmin ,async (req,res) => {
         role: req.body.role
     });
     try {
+        const emailContent = "Hello and welcome to Zeit! Hope you are ready to get to work as an " + req.body.role + "!\nHere are your login credentials:\nEmail: " + req.body.email + "\nPassword: " + req.body.password + "\nNote that you will have to change that password upon your first login.\nGood luck and have a good time!";
+        const emailResponse = await sendMailTo(req.body.email, 'Account created', emailContent)
         const savedUser = await user.save();
-        res.send({user: savedUser._id});
+        res.send({user: savedUser._id,
+                  emailResponse: emailResponse});
     } catch (err) {
-        res.status(400).send(err);
+      if (err.name === 'ValidationError') {
+        res.status(400).send('Invalid input data: ' + err.message);
+    } else {
+        res.status(500).send('Error saving user to database: ' + err.message);
+    }
     }
 })
 
 //UPDATE PASSWORD
-router.patch('/changePassword/:userID', verifyTokenAndAdmin,async(req,res)=>
+router.patch('/changePassword/:userID',async(req,res)=>
 {
     try {
-        const {error} = passwordValidation(req.body.password);
+        const {error} = passwordValidation(req.body);
         if(error)
             {
                 return res.status(400).send(error.details[0].message)
@@ -63,7 +70,7 @@ router.patch('/changePassword/:userID', verifyTokenAndAdmin,async(req,res)=>
         })
         res.json(patchedUser);
     } catch (err) {
-        res.json("Eroare")
+        res.json(err.message)
     }
 })
 
@@ -80,7 +87,7 @@ router.get('/', verifyTokenAndManager,async(req, res) =>{
 })
 
 //UPDATE USER DETAILS
-router.put('/:userID', verifyToken,async(req,res) =>{
+router.put('/:userID',async(req,res) =>{
     try {
         if(req.body.hasOwnProperty('password'))
         {
@@ -155,26 +162,26 @@ router.get('/performance/:userID', async (req, res) => {
         performanceCount[i] = assistedCounter[i] + completedCounter[i];
       }
       if (performanceCount.every(count => count === 0)) {
-        res.json('Low performance');
+        res.json(1);
       }
       else if (performanceCount[0] + performanceCount[1] > performanceCount[1] + performanceCount[2] && 
           performanceCount[0] + performanceCount[1] > performanceCount[2] + performanceCount[3]) {
-        res.json('Low performance');
+        res.json(1);
       } else if (performanceCount[1] + performanceCount[2] > performanceCount[0] + performanceCount[1] && 
                  performanceCount[1] + performanceCount[2] > performanceCount[2] + performanceCount[3]) {
-        res.json('Medium performance');
+        res.json(2);
       } else if (performanceCount[2] + performanceCount[3] > performanceCount[0] + performanceCount[1] && 
                  performanceCount[2] + performanceCount[3] > performanceCount[1] + performanceCount[2]) {
-        res.json('High performance');
+        res.json(3);
       }
       else if(performanceCount[0] + performanceCount[1] === performanceCount[1]+ performanceCount[2]){
-        res.json('Medium performance');
+        res.json(2);
       }
       else if(performanceCount[1] + performanceCount[2] === performanceCount[2]+ performanceCount[3]){
-        res.json('High performance');
+        res.json(3);
       }
       else if(performanceCount[0] + performanceCount[1] === performanceCount[2]+ performanceCount[3]){
-        res.json('High performance');
+        res.json(3);
       }
     } catch (error) {
       res.json({ message: error });
@@ -216,6 +223,24 @@ router.get('/getDetails/:userID', async(req, res) =>{
         res.status(400).json({message: error})
     }
 })
-  
-module.exports = router;
 
+router.post('/findByEmail', async(req,res) =>{
+  try {
+      const user = await User.find({email:req.body.email})
+      return res.status(200).json(user[0]);
+  } catch (error) {
+    res.status(400).json({message: error})
+  }
+})
+
+router.post('/sendEmail/forgotPassword', async(req,res) =>{
+  try {
+    const emailResponse = await sendMailTo(req.body.recip, req.body.subject, req.body.content)
+    res.json(emailResponse)
+}
+  catch (error) {
+    
+  }
+})
+
+module.exports = router;

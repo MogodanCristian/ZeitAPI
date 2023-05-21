@@ -222,17 +222,16 @@ function calculateScore(priority, difficulty) {
   // Define a function to calculate the performance level based on the score
   function calculatePerformanceLevel(score) {
     if (score >= 1 && score < 4) {
-      return "Low performance";
+      return 1
     } else if (score >= 4 && score < 9) {
-      return "Medium performance";
+      return 2
     } else if (score >= 9 && score <= 16) {
-      return "High performance";
+      return 3
     }
   }
 
-  router.get('/getRecommendedEmployee/:taskID', async(req,res) =>{
+  router.post('/getRecommendedEmployee/:taskID', async(req,res) =>{
     const taskId = req.params.taskID;
-
     try {
         let project = await axios.get('http://localhost:3000/api/tasks/getProject/' + taskId);
         project = project.data
@@ -251,15 +250,12 @@ function calculateScore(priority, difficulty) {
             };
             return employeeWithPerformance;
         }));
-        let suggestedEmployee = employeesWithPerformance.filter(employee => performanceLevel === employee.performance)
-        if(suggestedEmployee.length === 0)
+        let suggestedEmployee = employeesWithPerformance.filter(employee => performanceLevel === employee.performance)[0]
+        if(!suggestedEmployee)
         {
-            const higherPerformanceEmployees = employeesWithPerformance.filter(employee => employee.performance > performanceLevel);
-            if (higherPerformanceEmployees.length > 0) {
-                suggestedEmployee = higherPerformanceEmployees.sort((a, b) => b.performance - a.performance)[0];
-            }
-            else{
-                suggestedEmployee = employeesWithPerformance.sort((a, b) => b.performance - a.performance)[0];
+            suggestedEmployee = employeesWithPerformance.filter(employee => employee.performance > performanceLevel)[0];
+            if (!suggestedEmployee) {
+                suggestedEmployee = employeesWithPerformance.filter(employee => employee.performance < performanceLevel)[0];
             }
         }
         if(!suggestedEmployee) {
@@ -273,5 +269,53 @@ function calculateScore(priority, difficulty) {
         res.status(500).json({ message: 'Internal server error' });
     }
 })
+
+router.get('/getRemainingTasks/:taskID', async(req,res) =>{
+    try {
+        const bucket = await Bucket.findOne({ tasks: req.params.taskID });
+    const remainingTasks = bucket.tasks.filter((task) => task.toString() !== req.params.taskID);
+
+    const promises = remainingTasks
+      .map(async (task) => {
+        const t = await Task.findById(task);
+        return t;
+      });
+
+    let arr = await Promise.all(promises);
+    arr=arr.filter(task => task.progress !== 'Done' )
+
+    res.json(arr);
+      } catch (error) {
+        res.json(error)
+      }
+})
+
+router.get('/getTasksProgress/:projectID', async (req, res) => {
+    try {
+      const project = await Project.findById(req.params.projectID).populate({
+        path: 'buckets',
+        populate: {
+          path: 'tasks',
+          model: 'Task'
+        }
+      });
+  
+      const tasks = project.buckets.reduce((acc, bucket) => acc.concat(bucket.tasks), []);
+      const possibleProgressStatuses = ['Not Started', 'In Progress', 'Stuck', 'Done'];
+      const progressCounts = possibleProgressStatuses.reduce((acc, progress) => {
+        acc[progress] = tasks.filter(task => task.progress === progress).length;
+        return acc;
+      }, {});
+  
+      res.json({
+        progressCounts
+      });
+    } catch (error) {
+      res.json({
+        message: error.message
+      });
+    }
+  });
+  
 module.exports = router;
 
