@@ -35,4 +35,49 @@ router.get('/:userID', verifyToken, async (req, res) => {
     }
   });
 
+
+  router.delete('/:messageID', async(req,res) =>{
+    try {
+      const removed = await Message.deleteOne(
+        {_id: req.params.messageID});
+    res.json(removed);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  })
+
+  router.get('/:userID/hasUnread', async (req, res) => {
+    const userID = req.params.userID;
+  
+    try {
+      const messages = await Message.find({
+        user: userID
+      }).exec();
+      const hasUnread = messages.some(
+        (message) => message.user == userID && !message.is_read
+      );
+  
+      res.json({ hasUnread });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'An error occurred' });
+    }
+  });
+
+  router.put('/:messageID', async (req, res) =>{
+    try {
+      const patched = await Message.findByIdAndUpdate(
+        {_id: req.params.messageID},
+        {
+            $set: req.body
+        });
+    res.json(patched);
+      
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'An error occurred' });
+    }
+  })
+  
 module.exports = router;
