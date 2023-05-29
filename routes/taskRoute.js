@@ -230,45 +230,79 @@ function calculateScore(priority, difficulty) {
     }
   }
 
-  router.post('/getRecommendedEmployee/:taskID', async(req,res) =>{
+  router.post('/getRecommendedEmployee/:taskID', async (req, res) => {
     const taskId = req.params.taskID;
     try {
-        let project = await axios.get('http://localhost:3000/api/tasks/getProject/' + taskId);
-        project = project.data
-        const projectEmployees = await Project.findById(project._id).populate('employees');
-        if (!project) {
-            return res.status(404).json({ message: 'Project not found' });
-        }
-        const availableEmployees = projectEmployees.employees.filter(user => !user.is_working);
-        const score = calculateScore(req.body.priority, req.body.difficulty)
-        const performanceLevel = calculatePerformanceLevel(score)
-        const employeesWithPerformance = await Promise.all(availableEmployees.map(async employee => {
-            const response = await axios.get('http://localhost:3000/api/users/performance/'+employee._id);
-            const employeeWithPerformance = {
-                ...employee.toObject(),
-                performance: response.data
-            };
-            return employeeWithPerformance;
-        }));
-        let suggestedEmployee = employeesWithPerformance.filter(employee => performanceLevel === employee.performance)[0]
-        if(!suggestedEmployee)
-        {
-            suggestedEmployee = employeesWithPerformance.filter(employee => employee.performance > performanceLevel)[0];
-            if (!suggestedEmployee) {
-                suggestedEmployee = employeesWithPerformance.filter(employee => employee.performance < performanceLevel)[0];
+        const project = await axios.get('http://localhost:3000/api/tasks/getProject/' + taskId);
+        const projectData = await Project.findById(project.data._id)
+          .populate({
+            path: 'buckets',
+            populate: {
+              path: 'tasks',
+              model: 'Task',
+              populate: {
+                path: 'assigned_to',
+                model: 'User',
+                select: 'first_name last_name'
+              }
             }
+          })
+          .populate('employees');
+        if (!projectData) {
+          return res.status(404).json({ message: 'Project not found' });
         }
-        if(!suggestedEmployee) {
-            return res.status(404).json({ message: 'No employee found' });
-          } 
-        else {
-            return res.status(200).json(suggestedEmployee);
+        
+        const tasks = projectData.buckets.reduce((allTasks, bucket) => {
+            if (bucket.tasks && bucket.tasks.length > 0) {
+              allTasks.push(...bucket.tasks);
+            }
+            return allTasks;
+          }, []);
+
+      const availableEmployees = projectData.employees.filter(user => !user.is_working);
+      const score = calculateScore(req.body.priority, req.body.difficulty);
+      const performanceLevel = calculatePerformanceLevel(score);
+      const employeesWithPerformance = await Promise.all(availableEmployees.map(async employee => {
+        const response = await axios.get('http://localhost:3000/api/users/performance/' + employee._id);
+        const employeeWithPerformance = {
+          ...employee.toObject(),
+          performance: response.data
+        };
+        return employeeWithPerformance;
+      }));
+  
+      const employeesWithTasks = employeesWithPerformance.map(employee => {
+        const numberOfTasks = tasks.reduce((count, task) => {
+          if (task.assigned_to && task.assigned_to._id.toString() === employee._id.toString() && !task.completed_by) {
+            return count + 1;
           }
+          return count;
+        }, 0);
+        employee.number_of_tasks = numberOfTasks;
+        return employee;
+      });
+  
+  
+      let suggestedEmployee = employeesWithPerformance.filter(employee => performanceLevel === employee.performance);
+      if (!suggestedEmployee) {
+        suggestedEmployee = employeesWithPerformance.filter(employee => employee.performance > performanceLevel);
+        if (!suggestedEmployee) {
+          suggestedEmployee = employeesWithPerformance.filter(employee => employee.performance < performanceLevel);
+        }
+      }
+
+      if (!suggestedEmployee.length) {
+        return res.status(404).json({ message: 'No employee found' });
+      } else {
+        suggestedEmployee.sort((a, b) => a.number_of_tasks - b.number_of_tasks);
+        const selectedEmployee = suggestedEmployee[0];
+        return res.status(200).json(selectedEmployee);
+      }
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal server error' });
+      console.error(err);
+      res.status(500).json({ message: 'Internal server error' });
     }
-})
+  });
 
 router.get('/getRemainingTasks/:taskID', async(req,res) =>{
     try {

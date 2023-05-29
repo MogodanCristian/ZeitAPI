@@ -234,11 +234,10 @@ router.get('/:projectID/tasksData', async (req, res) => {
           }
         }
       });
-  
       const employees = {};
       for (const bucket of project.buckets) {
         for (const task of bucket.tasks) {
-          if (task.assigned_to) {
+          if (task.assigned_to && !task.completed_by) {
             const employeeName = `${task.assigned_to.first_name} ${task.assigned_to.last_name}`;
             if (!employees[employeeName]) {
               employees[employeeName] = {
@@ -295,4 +294,26 @@ router.get('/:projectTitle/getManager', async (req, res) => {
     res.status(500).json({ error: 'Failed to get manager' });
     }
 });
+
+router.get('/:projectID/getUnassignedTasks', async (req, res) =>{
+    try {
+        const project = await Project.findById(req.params.projectID).populate({
+            path: 'buckets',
+            populate: { path: 'tasks' }
+          });
+      
+          const unassignedTasks = [];
+          for (const bucket of project.buckets) {
+          for (const task of bucket.tasks) {
+                if (!task.assigned_to) {
+                unassignedTasks.push(task);
+                    }
+                }
+            }
+          res.status(200).json(unassignedTasks);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to retrieve tasks' });
+    }
+})
+
 module.exports = router;
