@@ -13,13 +13,14 @@ const taskSchema = mongoose.Schema({
         type: Date,
         default : Date.now
     },
-    start_date: [{
+    start_date: {
         type: Date,
-        default: Date.now,
-    }],
-    end_date: [{
+        default:null
+    },
+    end_date: {
         type: Date,
-    }],
+        default:null
+    },
     completed_by: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

@@ -69,7 +69,7 @@ router.put('/:bucketID',verifyTokenAndManagerAuthorization,async(req,res)=>{
     }
 })
 //GET ALL BUCKETS
-router.get('/',verifyTokenAndAdmin,async(req,res)=>{
+router.get('/',verifyToken,async(req,res)=>{
     try {
     const buckets = await Bucket.find();
     res.json(buckets);

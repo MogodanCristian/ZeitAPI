@@ -75,7 +75,7 @@ router.put('/:projectID',verifyTokenAndManagerAuthorization ,async(req,res) =>{
 
 // GET ALL PROJECTS
 
-router.get('/' ,verifyTokenAndAdmin,async (req,res) =>{
+router.get('/' ,verifyToken,async (req,res) =>{
     try {
         const projects = await Project.find();
         res.json(projects);

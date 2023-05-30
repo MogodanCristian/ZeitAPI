@@ -4,23 +4,20 @@ const jwt =  require('jsonwebtoken');
 const {taskValidation} = require('../validation')
 const Bucket = require('../models/Bucket');
 const Project = require('../models/Project')
-const { verifyTokenAndManagerAuthorization, verifyTokenAndAdmin, verifyToken } = require('./verifyToken');
+const { verifyTokenAndManagerAuthorization, verifyTokenAndAdmin, verifyTokenAndManager, verifyToken } = require('./verifyToken');
 const axios = require('axios');
 //CREATE TASK
-router.post('/:bucketID',verifyTokenAndManagerAuthorization ,async (req,res)=>{
+
+router.post('/:bucketID',verifyTokenAndManager ,async (req,res)=>{
     const {error} = taskValidation(req.body);
     if(error)
     {
         return res.status(400).send(error.details[0].message);
     }
-    var start = req.body.start_date;
-    var end = req.body.end_date;
     const task = new Task({
         title: req.body.title,
         priority: req.body.priority
     })
-    task.start_date.push(start);
-    task.end_date.push(end);
     try {
         const savedTask = await task.save();
         const patched = await Bucket.findByIdAndUpdate(
@@ -351,5 +348,36 @@ router.get('/getTasksProgress/:projectID', async (req, res) => {
     }
   });
   
+// MOVE TASK
+router.post('/moveTask/:targetBucketID/:taskID', async (req, res) => {
+  const { targetBucketID, taskID } = req.params;
+
+  try {
+    const originalBucket = await Bucket.findOne({ tasks: taskID });
+
+    if (!originalBucket) {
+      return res.status(404).json({ error: 'Original bucket not found' });
+    }
+
+    const targetBucket = await Bucket.findById(targetBucketID);
+
+    if (!targetBucket) {
+      return res.status(404).json({ error: 'Target bucket not found' });
+    }
+
+    originalBucket.tasks.pull(taskID);
+    targetBucket.tasks.push(taskID);
+
+    await originalBucket.save();
+    await targetBucket.save();
+
+    res.status(200).json({ message: 'Task moved successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 module.exports = router;
 
