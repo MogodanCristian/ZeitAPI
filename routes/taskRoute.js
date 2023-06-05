@@ -135,6 +135,7 @@ router.get('/',verifyTokenAndAdmin,async(req,res)=>{
 
 //UPDATE TASK DETAILS
 router.put('/:taskID', verifyToken,async(req,res) =>{
+
     try {
         const patched = await Task.findById({
             _id: req.params.taskID
@@ -147,7 +148,7 @@ router.put('/:taskID', verifyToken,async(req,res) =>{
     {
         if(!patched.assigned_to)
         {
-            return res.json("You cannot complete or assist in an unassigned task!");
+            return res.json("You cannot complete or assist in an unassigned task!").status(400);
         }
         if(patched.previous)
         {
@@ -159,15 +160,6 @@ router.put('/:taskID', verifyToken,async(req,res) =>{
                 return res.json("You must complete the previous task first!")
             }
         }
-    }
-    if(req.body.assisted_by)
-    {
-        await patched.updateOne({
-            $addToSet:{
-                assisted_by: req.body.assisted_by
-            }
-        })
-         return res.json(patched);
     }
     await patched.updateOne(req.body)
     return res.json(patched);
@@ -378,6 +370,28 @@ router.post('/moveTask/:targetBucketID/:taskID', async (req, res) => {
   }
 });
 
+router.get('/getEmployeeTasks/:projectID/:userID', async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.projectID).populate({
+      path: 'buckets',
+      populate: {
+        path: 'tasks',
+        model: 'Task',
+        match: { assigned_to: req.params.userID }, // Filter tasks by assigned_to field
+      },
+    });
 
+    // Extract tasks assigned to the user
+    const tasks = project.buckets.reduce((accumulator, bucket) => {
+      accumulator.push(...bucket.tasks);
+      return accumulator;
+    }, []);
+
+    res.json(tasks);
+  } catch (error) {
+    // Handle error
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 module.exports = router;
 

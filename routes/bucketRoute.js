@@ -158,7 +158,28 @@ router.get('/getBuckets/:projectID',verifyToken , async(req,res)=>{
 module.exports = router;
 
 //GET ALL BUCKETS FOR PROJECT
-
+router.get('/getEmployeeBuckets/:projectID/:userID', async (req, res) => {
+    try {
+      const tasks = await Project.findById(req.params.projectID).populate({
+        path: 'buckets',
+        populate: {
+          path: 'tasks',
+          model: 'Task',
+          match: { assigned_to: req.params.userID }, // Filter tasks by assigned_to field
+        },
+      });
+  
+      // Extract buckets that have tasks assigned to the user
+      const filteredBuckets = tasks.buckets.filter((bucket) =>
+        bucket.tasks.length > 0
+      );
+  
+      res.json(filteredBuckets);
+    } catch (error) {
+      // Handle error
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
 
 //GET BUCKETS OF TASKS FOR EACH USER WITH THE CORESSPONDING TASK TITLES

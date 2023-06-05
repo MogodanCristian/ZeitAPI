@@ -243,4 +243,38 @@ router.post('/sendEmail/forgotPassword', async(req,res) =>{
   }
 })
 
+router.get('/getPerformanceDetails/:employeeID', async (req, res) => {
+  try {
+    const tasks_completed = await Task.find({ completed_by: req.params.userID });
+    const tasks_assisted = await Task.find({ assisted_by: req.params.userID });
+    var completedCounter = {
+      easy: 0,
+      medium: 0,
+      hard: 0,
+      'very hard': 0
+    };
+    var assistedCounter = {
+      easy: 0,
+      medium: 0,
+      hard: 0,
+      'very hard': 0
+    };
+
+    for (var i = 0; i < tasks_completed.length; i++) {
+      completedCounter[tasks_completed[i].difficulty]++;
+    }
+
+    for (var i = 0; i < tasks_assisted.length; i++) {
+      assistedCounter[tasks_assisted[i].difficulty]++;
+    }
+
+    res.json({
+      assisted: assistedCounter,
+      completed: completedCounter
+    });
+  } catch (error) {
+    res.json({ message: error });
+  }
+});
+
 module.exports = router;
