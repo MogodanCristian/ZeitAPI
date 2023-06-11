@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const Bucket = require('../models/Bucket');
+const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken');
 const Project = require('../models/Project');
 const { bucketValidation } = require('../validation');
@@ -99,7 +100,7 @@ router.delete('/:bucketID', verifyTokenAndManagerAuthorization ,async(req,res)=>
             const t = await Task.findById(task);
             if(t)
             {
-                await Task.remove({_id:t._id})
+                await Task.delete({_id:t._id})
             }
         });
         const removed = await Bucket.remove(
@@ -157,7 +158,7 @@ router.get('/getBuckets/:projectID',verifyToken , async(req,res)=>{
 
 module.exports = router;
 
-//GET ALL BUCKETS FOR PROJECT
+
 router.get('/getEmployeeBuckets/:projectID/:userID', async (req, res) => {
     try {
       const tasks = await Project.findById(req.params.projectID).populate({
@@ -165,7 +166,12 @@ router.get('/getEmployeeBuckets/:projectID/:userID', async (req, res) => {
         populate: {
           path: 'tasks',
           model: 'Task',
-          match: { assigned_to: req.params.userID }, // Filter tasks by assigned_to field
+          match: {
+            $or: [
+              { assigned_to: req.params.userID }, // Filter tasks by assigned_to field
+              { assisted_by: mongoose.Types.ObjectId(req.params.userID) } // Check if userID is present in assisted_by array
+            ]
+          },
         },
       });
   
@@ -180,6 +186,7 @@ router.get('/getEmployeeBuckets/:projectID/:userID', async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+  
 
 
 //GET BUCKETS OF TASKS FOR EACH USER WITH THE CORESSPONDING TASK TITLES

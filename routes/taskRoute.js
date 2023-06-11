@@ -3,6 +3,7 @@ const Task = require('../models/Task');
 const jwt =  require('jsonwebtoken');
 const {taskValidation} = require('../validation')
 const Bucket = require('../models/Bucket');
+
 const Project = require('../models/Project')
 const { verifyTokenAndManagerAuthorization, verifyTokenAndAdmin, verifyTokenAndManager, verifyToken } = require('./verifyToken');
 const axios = require('axios');
@@ -270,16 +271,14 @@ function calculateScore(priority, difficulty) {
         employee.number_of_tasks = numberOfTasks;
         return employee;
       });
-  
-  
-      let suggestedEmployee = employeesWithPerformance.filter(employee => performanceLevel === employee.performance);
-      if (!suggestedEmployee) {
-        suggestedEmployee = employeesWithPerformance.filter(employee => employee.performance > performanceLevel);
-        if (!suggestedEmployee) {
-          suggestedEmployee = employeesWithPerformance.filter(employee => employee.performance < performanceLevel);
+      let suggestedEmployee = employeesWithTasks.filter(employee => performanceLevel === employee.performance);
+
+      if (!suggestedEmployee.length) {
+        suggestedEmployee = employeesWithTasks.filter(employee => employee.performance > performanceLevel);
+        if (!suggestedEmployee.length) {
+          suggestedEmployee = employeesWithTasks.filter(employee => employee.performance < performanceLevel);
         }
       }
-
       if (!suggestedEmployee.length) {
         return res.status(404).json({ message: 'No employee found' });
       } else {
@@ -370,28 +369,58 @@ router.post('/moveTask/:targetBucketID/:taskID', async (req, res) => {
   }
 });
 
-router.get('/getEmployeeTasks/:projectID/:userID', async (req, res) => {
+router.get('/getEmployeeTasks/:bucketID/:userID', async (req, res) => {
   try {
-    const project = await Project.findById(req.params.projectID).populate({
-      path: 'buckets',
-      populate: {
-        path: 'tasks',
-        model: 'Task',
-        match: { assigned_to: req.params.userID }, // Filter tasks by assigned_to field
-      },
+    const bucket = await Bucket.findById(req.params.bucketID).populate({
+      path: 'tasks',
+      model: 'Task',
     });
 
-    // Extract tasks assigned to the user
-    const tasks = project.buckets.reduce((accumulator, bucket) => {
-      accumulator.push(...bucket.tasks);
-      return accumulator;
-    }, []);
+    const filteredTasks = bucket.tasks.filter(task => {
+      return (
+        task.assigned_to === req.params.userID ||
+        task.assisted_by.includes(req.params.userID)
+      );
+    });
 
-    res.json(tasks);
+    res.json(filteredTasks);
   } catch (error) {
     // Handle error
+    console.log(error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
+router.put('/setToUnassigned/:projectID/:userID', async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.projectID).populate({
+      path: 'buckets',
+      populate: { path: 'tasks', select: '_id assigned_to' }
+    });
+
+    const tasks = project.buckets.reduce((allTasks, bucket) => {
+      if (bucket.tasks && bucket.tasks.length > 0) {
+        allTasks.push(...bucket.tasks);
+      }
+      return allTasks;
+    }, []);
+
+    // Update tasks with matching assigned_to field
+    const updatedTasks = [];
+    for (const task of tasks) {
+      if (task.assigned_to && task.assigned_to.toString() === req.params.userID) {
+        const updatedTask = await Task.updateOne({ _id: task._id }, { assigned_to: null });
+        updatedTasks.push(updatedTask);
+      }
+    }
+
+    res.json(updatedTasks);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
 

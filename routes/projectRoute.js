@@ -6,6 +6,7 @@ const{projectValidation} = require('../validation.js');
 const Task = require('../models/Task');
 const{verifyToken, verifyTokenAndManagerAuthorization,verifyTokenAndManager, verifyTokenAndAdmin}=require('./verifyToken');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 
 //CREATE PROJECT
 router.post('/:managerID', verifyTokenAndManager ,async (req,res) =>{
@@ -315,5 +316,32 @@ router.get('/:projectID/getUnassignedTasks', async (req, res) =>{
         res.status(500).json({ error: 'Failed to retrieve tasks' });
     }
 })
+
+router.get('/:projectID/availableForAssist/:taskID', async(req, res)=>{
+    try {
+        const project = await Project.find(
+            {_id: req.params.projectID}
+        )
+        const task = await Task.findById(req.params.taskID)
+        let arr = []
+        const promises = project[0].employees.map(async(employee) => {
+            const e = await User.findById(employee);
+            return e;
+        });
+        arr = await Promise.all(promises);
+        arr = arr.filter(
+            (employee) => employee._id.toString() !== mongoose.Types.ObjectId(task.assigned_to).toString()
+            );
+        res.json(arr)
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error
+        })
+    }
+})
+
+
 
 module.exports = router;

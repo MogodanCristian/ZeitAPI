@@ -113,18 +113,54 @@ router.delete('/:userID', verifyTokenAndAdmin,async(req,res) =>{
         const deletedUser = await User.findById({
             _id: req.params.userID
         });
+        if(!deletedUser)
+        {
+          res.status(404).json('User not found')
+        }
         if(deletedUser.role === "admin"){
             if(req.user._id == deletedUser._id)
             {
                 return res.json("You shouldn't delete yourself!")
             }
         }
-        await deletedUser.delete();
-        res.json(deletedUser._id);
-    } catch (error) {
-        res.json({
-            message: error
+        const projects = await Project.find({
+          employees: req.params.userID
         })
+
+         
+    for (const project of projects) {
+      await Project.updateOne(
+        { _id: project._id },
+        { $pull: { employees: req.params.userID } }
+      );
+    }
+
+    const tasks = await Task.find({
+      assigned_to: req.params.userID
+    })
+
+    for (const task of tasks) {
+      if (task.completed_by === null) {
+        await Task.updateOne(
+          {
+            _id: task._id
+          },
+          {
+            assigned_to: null
+          }
+        );
+      }
+    }
+     await User.updateOne({
+      _id: deletedUser._id
+     },{
+      account_active: false
+     })
+
+     res.json(deletedUser._id)
+    } catch (error) {
+        const errorMessage = error.message || 'Internal Server Error';
+        res.status(500).json({ message: errorMessage });
     }
 })
 
@@ -202,7 +238,8 @@ router.get('/availableEmployees/:projectID', async (req, res) => {
   
       const availableEmployees = await User.find({
         _id: { $nin: project.employees },
-        role: {$ne: 'admin'}
+        role: {$ne: 'admin'},
+        account_active:{$ne: 'false'}
       });
   
       res.status(200).json(availableEmployees);
@@ -245,8 +282,10 @@ router.post('/sendEmail/forgotPassword', async(req,res) =>{
 
 router.get('/getPerformanceDetails/:employeeID', async (req, res) => {
   try {
-    const tasks_completed = await Task.find({ completed_by: req.params.userID });
-    const tasks_assisted = await Task.find({ assisted_by: req.params.userID });
+    const tasks_completed = await Task.find({ completed_by: req.params.employeeID });
+    const tasks_assisted = await Task.find({ assisted_by: req.params.employeeID });
+    console.log(tasks_assisted)
+    console.log(tasks_completed)
     var completedCounter = {
       easy: 0,
       medium: 0,
@@ -267,7 +306,6 @@ router.get('/getPerformanceDetails/:employeeID', async (req, res) => {
     for (var i = 0; i < tasks_assisted.length; i++) {
       assistedCounter[tasks_assisted[i].difficulty]++;
     }
-
     res.json({
       assisted: assistedCounter,
       completed: completedCounter

@@ -42,10 +42,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
-    is_working:{
+    account_active:{
         type: Boolean,
-        default: false
-    },
+        default:true
+    }
 });
 
 module.exports = mongoose.model('User',userSchema);

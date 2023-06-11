@@ -23,7 +23,7 @@ router.post('/', verifyToken, async(req,res) =>{
     }
 })
 
-router.get('/:userID', verifyToken, async (req, res) => {
+router.get('/:userID', async (req, res) => {
     try {
       const messages = await Message.find({
         user:req.params.userID
