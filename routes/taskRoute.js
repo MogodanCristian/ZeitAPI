@@ -375,14 +375,15 @@ router.get('/getEmployeeTasks/:bucketID/:userID', async (req, res) => {
       path: 'tasks',
       model: 'Task',
     });
-
     const filteredTasks = bucket.tasks.filter(task => {
+      if (task.assigned_to === null) {
+        return false;
+      }
       return (
-        task.assigned_to === req.params.userID ||
+        task.assigned_to.toString() === req.params.userID.toString() ||
         task.assisted_by.includes(req.params.userID)
       );
     });
-
     res.json(filteredTasks);
   } catch (error) {
     // Handle error
@@ -390,6 +391,7 @@ router.get('/getEmployeeTasks/:bucketID/:userID', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 router.put('/setToUnassigned/:projectID/:userID', async (req, res) => {
