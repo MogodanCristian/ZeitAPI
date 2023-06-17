@@ -342,6 +342,23 @@ router.get('/:projectID/availableForAssist/:taskID', async(req, res)=>{
     }
 })
 
+router.get('/:projectID/getProjectTasks', async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.projectID).populate({
+            path: 'buckets',
+            populate: { path: 'tasks' }
+        });
+
+        const tasks = project.buckets.reduce((allTasks, bucket) => {
+            allTasks.push(...bucket.tasks);
+            return allTasks;
+        }, []);
+
+        res.json({ tasks });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to retrieve tasks' });
+    }
+});
 
 
 module.exports = router;

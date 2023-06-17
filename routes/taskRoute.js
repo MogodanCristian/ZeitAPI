@@ -248,7 +248,7 @@ function calculateScore(priority, difficulty) {
             }
             return allTasks;
           }, []);
-
+          
       const availableEmployees = projectData.employees.filter(user => !user.is_working);
       const score = calculateScore(req.body.priority, req.body.difficulty);
       const performanceLevel = calculatePerformanceLevel(score);
